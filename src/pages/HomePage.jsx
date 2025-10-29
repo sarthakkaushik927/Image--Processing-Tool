@@ -1,32 +1,57 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// ⬇️ IMPORTANT: Correctly importing components from the parent directory
+// ⬇️ ESSENTIAL: Importing all external components ⬇️
 import CropWorkspace from '../components/CropWorkspace'; 
 import TextExtractorWorkspace from '../components/TextExtractorWorkspace'; 
+import JpgToPngWorkspace from '../components/JpgToPngWorkspace'; 
+import PngToJpgWorkspace from '../components/PngToJpgWorkspace';
+import FindObjectWorkspace from '../components/FindObjectWorkspace';
+import MagicBrushWorkspace from '../components/MagicBrushWorkspace';
+import SharpnessWorkspace from '../components/SharpnessWorkspace';
+import AngleSliderWorkspace from '../components/AngleSliderWorkspace';
+import SplashPage from '../components/SplashPage';
+import AboutUsView from '../components/AboutUsView';
+import DobbyChat from '../components/DobbyChat';
+import DobbyIntro from '../components/DobbyIntro';
 
 import {
   Search, LogOut, ArrowLeft, Rocket, Wrench, FileText, Settings,
   LifeBuoy, Star, Home, Download, UserCircle, UploadCloud, Edit,
   PlusCircle, BookOpen, Menu, X, 
   ChevronRight, Edit2,
-  Crop, Repeat, RefreshCw, Wand2, Sun // Naye icons
+  Crop, Repeat, RefreshCw, Wand2, Sun // Lucide icons used across the app
 } from 'lucide-react';
 
 
 // =======================================================================
-//  Home Page (Main Component)
+//  Home Page (Main Component - Handles Splash Screen)
 // =======================================================================
 export default function HomePage({ isAuthenticated, onLogout, setPage, page, username, setUsername, profileImage, setProfileImage }) {
   const [showHelp, setShowHelp] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); 
 
   useEffect(() => {
+    // Splash Screen Timer: Only show for 2 seconds when component mounts
+    const timer = setTimeout(() => {
+        setShowSplash(false);
+    }, 2000); 
+    
+    return () => clearTimeout(timer); // Cleanup timer 
+  }, [isAuthenticated]);
+    
+  useEffect(() => {
       // Reset showHelp whenever navigation page changes
-      if (page !== null || page === 'account' || page === 'downloads' || page === 'search' || page === 'profile' || page === 'tools' || page === 'crop' || page === 'text-extractor') {
+      if (page !== null || page === 'about' || page === 'dobby-intro' || page === 'dobby-chat' || page === 'account' || page === 'downloads' || page === 'search' || page === 'profile' || page === 'tools' || page === 'crop' || page === 'text-extractor' || page === 'jpg-to-png' || page === 'png-to-jpg' || page === 'find-object' || page === 'magic-brush' || page === 'sharpness' || page === 'angle-slider') {
           setShowHelp(false);
       }
   }, [page]);
 
+
+  // ⬇️ RENDER SPLASH SCREEN IF ACTIVE ⬇️
+  if (showSplash) {
+    return <SplashPage />;
+  }
 
   return (
     <motion.div
@@ -56,6 +81,12 @@ export default function HomePage({ isAuthenticated, onLogout, setPage, page, use
                 profileImage={profileImage}
                 setProfileImage={setProfileImage}
               />
+            ) : page === 'about' ? (
+                <AboutUsView key="about" setPage={setPage} />
+            ) : page === 'dobby-intro' ? (
+                <DobbyIntro key="dobby-intro" setPage={setPage} />
+            ) : page === 'dobby-chat' ? (
+                <DobbyChat key="dobby-chat" setPage={setPage} />
             ) : isAuthenticated && page === 'account' ? (
               <AccountView key="account" onLogout={onLogout} setPage={setPage} />
             ) : page === 'downloads' ? (
@@ -64,10 +95,22 @@ export default function HomePage({ isAuthenticated, onLogout, setPage, page, use
               <SearchView key="search" setPage={setPage} />
             ) : page === 'tools' ? ( 
               <ToolsView key="tools" setPage={setPage} />
-            ) : page === 'crop' ? ( // Crop Workspace Page
+            ) : page === 'crop' ? ( 
               <CropWorkspace key="crop" setPage={setPage} />
-            ) : page === 'text-extractor' ? ( // Text Extractor Page
+            ) : page === 'text-extractor' ? ( 
               <TextExtractorWorkspace key="text-extractor" setPage={setPage} />
+            ) : page === 'jpg-to-png' ? (
+              <JpgToPngWorkspace key="jpg-to-png" setPage={setPage} />
+            ) : page === 'png-to-jpg' ? (
+              <PngToJpgWorkspace key="png-to-jpg" setPage={setPage} />
+            ) : page === 'find-object' ? (
+              <FindObjectWorkspace key="find-object" setPage={setPage} />
+            ) : page === 'magic-brush' ? (
+              <MagicBrushWorkspace key="magic-brush" setPage={setPage} />
+            ) : page === 'sharpness' ? (
+              <SharpnessWorkspace key="sharpness" setPage={setPage} />
+            ) : page === 'angle-slider' ? (
+              <AngleSliderWorkspace key="angle-slider" setPage={setPage} />
             ) : showHelp ? (
               <HelpView key="help" setShowHelp={setShowHelp} />
             ) : (
@@ -79,9 +122,6 @@ export default function HomePage({ isAuthenticated, onLogout, setPage, page, use
     </motion.div>
   );
 }
-
-
-
 
 
 // =======================================================================
@@ -169,7 +209,7 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  Main View
+//  Main View (Handles links to About and Dobby)
 // =======================================================================
 function MainView({ setShowHelp, setPage }) {
   return (
@@ -186,9 +226,15 @@ function MainView({ setShowHelp, setPage }) {
           <GradientButton text="GenerateImage" className="lg:px-57 px-33 max-w-40 lg:min-w-60 justfy-center items-center text-center flex flex-col"/>
         </div>
         <div className="mt-12 flex justify-center iten lg:justify-center gap-4 items-center">
-          <SmallButton className="h-16"> <span className="font-semibold px-6">About</span> </SmallButton>
-          <SmallButton className="w-16 h-16"> <img className='h-12 w-12' src="/chatbot.png" alt="Dobby" onError={(e) => e.target.style.display='none'} /> </SmallButton>
-          <SmallButton className="h-16" onClick={() => setShowHelp(true)}> <span className="font-semibold px-6">Help?</span> </SmallButton>
+          <SmallButton className="h-16" onClick={() => setPage('about')}> 
+                <span className="font-semibold px-6">About</span> 
+            </SmallButton>
+          <SmallButton className="w-16 h-16" onClick={() => setPage('dobby-intro')}> 
+                <img className='h-12 w-12' src="/chatbot.png" alt="Dobby" onError={(e) => e.target.style.display='none'} /> 
+            </SmallButton>
+          <SmallButton className="h-16" onClick={() => setShowHelp(true)}> 
+                <span className="font-semibold px-6">Help?</span> 
+            </SmallButton>
         </div>
         
       </div>
@@ -268,6 +314,7 @@ function AccountView({ onLogout, setPage }) {
             <LogOut size={20} /> Logout
           </motion.button>
         </div>
+        
       </div>
     </motion.div>
   );
@@ -281,6 +328,7 @@ function InfoField({ label, value, isPassword = false }) {
       <div className="bg-gradient-to-r from-blue-500/30 to-purple-600/30 p-3 rounded-lg text-white font-medium shadow-inner">
         {isPassword ? '••••••••' : value}
       </div>
+      
     </div>
   );
 }
@@ -412,7 +460,7 @@ function DownloadsView({ setPage }) {
 function ToolsView({ setPage }) {
   
   const handleToolClick = (toolName) => {
-    alert(`Navigating to ${toolName} tool... (Routing not implemented yet)`);
+    // Fallback handler for unlinked tools (not needed since all are linked now)
   };
 
   return (
@@ -437,50 +485,60 @@ function ToolsView({ setPage }) {
         </span>
       </div>
       
-      {/* Tools Grid */}
+      {/* Tools Grid (3x3 layout) */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 ">
+        
+        {/* Row 1 */}
+        <ToolCard 
+          icon={<Search size={48} />} 
+          title="Find Object" 
+          onClick={() => setPage('find-object')} 
+        />
         <ToolCard 
-          img={"/crope.png"}
-          width={20}
-          icon={<Crop size={48} />} 
-          title="Crop" 
-          onClick={() => setPage('crop')} // Navigates to external CropWorkspace
-        />
-        <ToolCard 
-          img={"/extractere.png"}
-          width={20}
           icon={<FileText size={48} />} 
           title="Text Extractor" 
-          onClick={() => setPage('text-extractor')} // Navigates to external TextExtractorWorkspace
+          onClick={() => setPage('text-extractor')} 
         />
         <ToolCard 
-          img={"/jpgtopng.png"}
-          width={60}
           icon={<Repeat size={48} />} 
           title="Jpg to png" 
-          onClick={() => handleToolClick('Jpg to png')} 
+          onClick={() => setPage('jpg-to-png')} 
         />
+        
+        {/* Row 2 */}
         <ToolCard 
-          img={"/pngtojpg.png"}
-          width={20}
           icon={<RefreshCw size={48} />} 
           title="Png to jpg" 
-          onClick={() => handleToolClick('Png to jpg')} 
+          onClick={() => setPage('png-to-jpg')} 
         />
         <ToolCard 
-          img={"/magicbrushe.png"}
-          width={20}
           icon={<Wand2 size={48} />} 
           title="Magic Brush" 
-          onClick={() => handleToolClick('Magic Brush')} 
+          onClick={() => setPage('magic-brush')} 
         />
+        <ToolCard 
+          icon={<Sun size={48} />} 
+          title="Brightness" 
+          onClick={() => setPage('brightness')} 
+        />
+        
+        {/* Row 3 */}
         <ToolCard 
-          img={"/claritye.png"}
-          width={80}
-          icon={<Sun size={48} />} 
-          title="Clarity" 
-          onClick={() => handleToolClick('Clarity')} 
+          icon={<Crop size={48} />} 
+          title="Crop" 
+          onClick={() => setPage('crop')} 
         />
+        <ToolCard 
+          icon={<Repeat size={48} className="rotate-90" />}
+          title="Angle Slider" 
+          onClick={() => setPage('angle-slider')} 
+        />
+        <ToolCard 
+          icon={<Star size={48} />} 
+          title="Sharpness" 
+          onClick={() => setPage('sharpness')} 
+        />
+        
       </div>
     </motion.div>
   );
@@ -506,16 +564,17 @@ function BubblesBackground() {
     { id: 3, x: '60%', y: '70%', size: 250, delay: 4, duration: 18 }, { id: 4, x: '20%', y: '80%', size: 150, delay: 6, duration: 22 },
   ];
   return (
-    <div className="absolute inset-0 overflow-hidden -z-0 pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden z-0 pointer-events-none">
       {bubbles.map((bubble) => (
         <motion.div
           key={bubble.id}
-          className="absolute bg-gradient-to-br from-blue-700 to-purple-700 opacity-20 rounded-full filter blur-3xl"
+          className="absolute bg-gradient-to-br from-blue-700 to-purple-700 opacity-50 rounded-full filter blur-3xl"
           style={{ width: bubble.size, height: bubble.size, top: bubble.y, left: bubble.x }}
           animate={{ x: [0, 50, -50, 0], y: [0, -50, 50, 0] }}
           transition={{ duration: bubble.duration, ease: "easeInOut", repeat: Infinity, repeatType: "mirror", delay: bubble.delay }}
         />
       ))}
+      
     </div>
   );
  }
@@ -563,7 +622,7 @@ function HelpCard({ icon, title, text }) {
  }
 
 // ToolCard (Used in ToolsView)
-function ToolCard({img, icon, title, onClick, width }) {
+function ToolCard({ icon, title, onClick }) {
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -5 }}
@@ -571,7 +630,6 @@ function ToolCard({img, icon, title, onClick, width }) {
       className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center gap-4 aspect-square cursor-pointer transition-all border-2 border-transparent hover:border-purple-500"
     >
       <div className="text-purple-400 flex flex-col items-center justify-center">
-        {/* <img src={img} alt="" className={`w-[${width}px]`} /> */}
         {icon}
       </div>
       <h3 className="text-xl font-semibold text-white text-center">{title}</h3>
