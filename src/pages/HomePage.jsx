@@ -1,67 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+// useNavigate hook hata diya kyunki use nahi ho raha
 // import { useNavigate } from 'react-router-dom';
 import {
   Search, LogOut, ArrowLeft, Rocket, Wrench, FileText, Settings,
   LifeBuoy, Star, Home, Download, UserCircle, UploadCloud, Edit,
-  PlusCircle, BookOpen, Menu, X, LogIn, UserPlus, 
-  ChevronRight 
+  PlusCircle, BookOpen, Menu, X, // LogIn, UserPlus hata diye
+  ChevronRight, Edit2,
+  Crop, Repeat, RefreshCw, Wand2, Sun // Naye icons
 } from 'lucide-react';
 
-
-export default function HomePage({ isAuthenticated, onLogout, setPage, page }) { 
-  
-  const [showHelp, setShowHelp] = useState(false); 
+// =======================================================================
+//  Home Page (Main Component)
+// =======================================================================
+// Naye props receive karein: username, setUsername, profileImage, setProfileImage
+export default function HomePage({ isAuthenticated, onLogout, setPage, page, username, setUsername, profileImage, setProfileImage }) {
+  const [showHelp, setShowHelp] = useState(false);
 
   const showAccountView = isAuthenticated && page === 'account';
-  const showHelpView = showHelp; 
+  const showProfileView = isAuthenticated && page === 'profile';
+  const showHelpView = showHelp;
   const showDownloadsView = page === 'downloads';
   const showSearchView = page === 'search';
- 
+  const showToolsView = page === 'tools'; // Naya view
+
   useEffect(() => {
-      
-     
-      if (page === null || page === 'account' || page === 'downloads' || page === 'search') {
-          
+      // Jab bhi 'page' state badle (Help ke alawa), showHelp ko false set karo
+      if (page !== null || page === 'account' || page === 'downloads' || page === 'search' || page === 'profile' || page === 'tools') {
           setShowHelp(false);
       }
-     
-  }, [page]); 
+  }, [page]);
 
 
   return (
     <motion.div
-      className="flex min-h-screen bg-gradient-to-b from-[#1c1c3a] to-[#121c3a] text-white relative" 
+      className="flex min-h-screen bg-gradient-to-b from-[#1c1c3a] to-[#121c3a] text-white relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <BubblesBackground />
       <main className="flex-1 p-6 md:p-10 relative z-10 w-full">
-        {/* HeaderNav props */}
+        {/* HeaderNav ko profileImage prop pass karein */}
         <HeaderNav
           isAuthenticated={isAuthenticated}
           onLogout={onLogout}
-          setPage={setPage} 
-          page={page} 
-          
+          setPage={setPage}
+          page={page}
+          profileImage={profileImage} // <-- Naya prop
         />
 
-        <div className="mt-10 md:mt-20"> 
+        <div className="mt-10 md:mt-20">
           <AnimatePresence mode="wait">
-           
-            {isAuthenticated && page === 'account' ? (
+            {isAuthenticated && page === 'profile' ? (
+              <ProfileView 
+                key="profile" 
+                setPage={setPage}
+                username={username}
+                setUsername={setUsername}
+                profileImage={profileImage}
+                setProfileImage={setProfileImage}
+              />
+            ) : isAuthenticated && page === 'account' ? (
               <AccountView key="account" onLogout={onLogout} setPage={setPage} />
             ) : page === 'downloads' ? (
               <DownloadsView key="downloads" setPage={setPage} />
             ) : page === 'search' ? (
               <SearchView key="search" setPage={setPage} />
-            ) : showHelp ? ( 
-              <HelpView key="help" setShowHelp={setShowHelp} /> 
+            ) : page === 'tools' ? ( // Naya ToolsView
+              <ToolsView key="tools" setPage={setPage} />
+            ) : showHelp ? (
+              <HelpView key="help" setShowHelp={setShowHelp} />
             ) : (
-              <MainView key="main" setShowHelp={setShowHelp} /> 
+              <MainView key="main" setShowHelp={setShowHelp} setPage={setPage} /> // setPage pass kiya
             )}
-            
           </AnimatePresence>
         </div>
       </main>
@@ -69,81 +81,69 @@ export default function HomePage({ isAuthenticated, onLogout, setPage, page }) {
   );
 }
 
-
-function HeaderNav({ isAuthenticated, onLogout, setPage, page }) {
- 
-  console.log("HeaderNav received props - isAuthenticated:", isAuthenticated, "setPage type:", typeof setPage, "page:", page);
-
+// =======================================================================
+//  Header Navigation Sub-Component (Logic Simplified)
+// =======================================================================
+// profileImage prop receive karein
+function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  
   const handleNavClick = (pageNameOrPath) => {
-     
-    console.log("handleNavClick called with:", pageNameOrPath, "setPage type:", typeof setPage);
-    
     if (typeof setPage === 'function') {
-        setPage(pageNameOrPath); 
+      setPage(pageNameOrPath);
     } else {
-        console.error("setPage prop is not a function inside handleNavClick!");
+      console.error("setPage prop is not a function inside handleNavClick!");
     }
     setIsOpen(false);
   }
 
-  
-   const commonNavLinks = (
+  const commonNavLinks = (
     <>
       <NavItem icon={<Home />} text="Home" active={page === null} onClick={() => handleNavClick(null)} />
       <NavItem icon={<Download />} text="Downloads" active={page === 'downloads'} onClick={() => handleNavClick('downloads')} />
       <NavItem icon={<UserCircle />} text="Account" active={page === 'account'} onClick={() => handleNavClick('account')} />
       <NavItem icon={<Search />} text="Search" active={page === 'search'} onClick={() => handleNavClick('search')} />
-       
     </>
   );
 
   return (
     <nav className="w-full flex justify-between items-center relative z-20">
       <div className="flex items-center gap-2 md:gap-4">
-        <img src="logo.svg" alt="FotoFix Logo" className="h-8 w-auto"  />
-       
+        <img src="logo.svg" alt="FotoFix Logo" className="h-8 w-auto" onError={(e) => e.target.style.display='none'} />
         <span onClick={() => handleNavClick(null)} className="translate-y-1 text-2xl font-bold text-white cursor-pointer">FotoFix</span>
         <div className="hidden md:flex items-center gap-6 ml-4">
-           {commonNavLinks}
+          {commonNavLinks}
         </div>
       </div>
+
+      {/* Right Side - Ab sirf Logged In View */}
       <div className="flex items-center gap-4">
-        {isAuthenticated ? (
-          <>
-            <img src="https://placehold.co/40x40/7c3aed/ffffff?text=U" alt="User Avatar" className="w-10 h-10 rounded-full border-2 border-blue-500"/>
-            <button onClick={onLogout} className="p-2 hover:bg-red-500/50 rounded-full hidden md:block" aria-label="Logout"> <LogOut size={20} /> </button>
-            <button onClick={toggleMenu} className="p-2 md:hidden focus:outline-none" aria-label="Toggle menu"> {isOpen ? <X size={24} /> : <Menu size={24} />} </button>
-          </>
-        ) : (
-          <>
-            <div className="hidden md:flex items-center gap-4">
-                
-                <button onClick={() => typeof setPage === 'function' ? setPage('login') : console.error("setPage not available for Login button")} className="px-4 py-2 rounded-full text-white hover:bg-white/10 transition-colors"> Login </button>
-                <button onClick={() => typeof setPage === 'function' ? setPage('signup') : console.error("setPage not available for Signup button")} className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold hover:from-blue-600 hover:to-purple-700 transition-all"> Sign Up </button>
-            </div>
-            <button onClick={toggleMenu} className="p-2 md:hidden focus:outline-none" aria-label="Toggle menu"> {isOpen ? <X size={24} /> : <Menu size={24} />} </button>
-          </>
-        )}
+        {/* Avatar image ab profileImage prop use karega */}
+        <img 
+          src={profileImage} 
+          alt="User Avatar" 
+          className="w-10 h-10 rounded-full border-2 border-blue-500 cursor-pointer object-cover"
+          onClick={() => handleNavClick('profile')}
+          onError={(e) => e.target.src = 'https://placehold.co/40x40/7c3aed/ffffff?text=U'} // Fallback
+        />
+        <button onClick={onLogout} className="p-2 hover:bg-red-500/50 rounded-full hidden md:block" aria-label="Logout"> <LogOut size={20} /> </button>
+        <button onClick={toggleMenu} className="p-2 md:hidden focus:outline-none" aria-label="Toggle menu"> {isOpen ? <X size={24} /> : <Menu size={24} />} </button>
       </div>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}
             className="absolute top-full left-0 right-0 mt-2 md:hidden bg-[#1c1c3a]/95 backdrop-blur-md shadow-lg p-4 z-40 overflow-hidden" >
             <ul className="flex flex-col space-y-3">
               {commonNavLinks} <hr className="border-gray-700 my-2" />
-              {isAuthenticated ? (
-                <li> <button onClick={() => { onLogout(); setIsOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300"> <LogOut size={20} /> <span className="font-medium">Logout</span> </button> </li>
-              ) : ( <>
-                   
-                   <li onClick={() => handleNavClick('login')}> <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-gray-700/50 hover:text-white cursor-pointer"> <LogIn size={20} /> <span className="font-medium">Login</span> </div> </li>
-                   <li onClick={() => handleNavClick('signup')}> <div className="flex items-center gap-3 px-4 py-3 rounded-lg text-white/70 hover:bg-gray-700/50 hover:text-white cursor-pointer"> <UserPlus size={20} /> <span className="font-medium">Sign Up</span> </div> </li>
-                 </>
-              )}
+              {/* Mobile Logout Button */}
+              <li> 
+                <button onClick={() => { onLogout(); setIsOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300"> 
+                  <LogOut size={20} /> <span className="font-medium">Logout</span> 
+                </button> 
+              </li>
             </ul>
           </motion.div>
         )}
@@ -153,7 +153,10 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page }) {
 }
 
 
-function MainView({ setShowHelp }) {
+// =======================================================================
+//  Main View (UPDATED)
+// =======================================================================
+function MainView({ setShowHelp, setPage }) { // setPage prop add kiya
   return (
     <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="flex flex-col lg:flex-row items-center gap-10 md:gap-20" >
@@ -163,7 +166,8 @@ function MainView({ setShowHelp }) {
         <div className="flex flex-col items-center lg:items-center gap-4">
           <div className="flex items-center gap-4">
             <GradientButton className='lg:px-20' text="Discover" isBlue />
-            <GradientButton className='lg:px-20' text="Create" isOutline />
+            {/* "Create" button ab 'tools' page par bhejega */}
+            <GradientButton className='lg:px-20' text="Create" isOutline onClick={() => setPage('tools')} />
           </div>
           <GradientButton text="GenerateImage" className="lg:px-57 px-33 max-w-40 lg:min-w-60 justfy-center items-center text-center flex flex-col"/>
         </div>
@@ -184,7 +188,11 @@ function MainView({ setShowHelp }) {
 
 
 
+// =======================================================================
+//  Help View
+// =======================================================================
 function HelpView({ setShowHelp }) {
+  // ... (Code waisa hi hai) ...
   return (
     <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }} >
       <button onClick={() => setShowHelp(false)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6"> <ArrowLeft size={18} /> Back </button>
@@ -205,30 +213,26 @@ function HelpView({ setShowHelp }) {
   );
 }
 
-
+// =======================================================================
+//  Account View
+// =======================================================================
 function AccountView({ onLogout, setPage }) {
+  // ... (Code waisa hi hai) ...
   const userData = {
     name: "Keshav Kumar", phone: "9528316559", email: "Keshav18@gmail.com",
     backupEmail: "krishna18@gmail.com", password: "••••••••", securityKey: "2678 8746 3827",
   };
-
   return (
     <motion.div key="account-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white"
-    >
-      {/* Back button */}
+      className="p-0 md:p-0 text-white" >
        <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
             <ArrowLeft size={18} /> Back to Home
         </button>
-
-      {/* Header */}
       <div className="flex items-center mb-8">
         <ChevronRight size={28} className="text-gray-400 -ml-2" />
         <h1 className="text-3xl font-bold ml-2">Setting</h1>
       </div>
       <h2 className="text-4xl font-bold text-center mb-10">Account Settings</h2>
-
-      {/* Card */}
       <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
           <div>
@@ -253,8 +257,9 @@ function AccountView({ onLogout, setPage }) {
   );
 }
 
-
+// InfoField
 function InfoField({ label, value, isPassword = false }) {
+  // ... (Code waisa hi hai) ...
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-400 mb-1">{label}</label>
@@ -266,8 +271,99 @@ function InfoField({ label, value, isPassword = false }) {
 }
 
 
+// =======================================================================
+//  Profile View (UPDATED)
+// =======================================================================
+function ProfileView({ setPage, username, setUsername, profileImage, setProfileImage }) {
+  const [nickname, setNickname] = useState(username); 
+  const [localProfileImage, setLocalProfileImage] = useState(profileImage);
+  const fileInputRef = useRef(null); 
 
+  const handleImageUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const newImageUrl = URL.createObjectURL(file);
+      setLocalProfileImage(newImageUrl);
+      // TODO: Add API call to upload image
+      console.log("Selected file:", file.name);
+    }
+  };
+
+  const handleSave = () => {
+    // Update the main App state
+    setUsername(nickname);
+    setProfileImage(localProfileImage);
+    // TODO: Add API call to save nickname and image URL
+    console.log("Saving changes:", { nickname, localProfileImage });
+    setPage(null); // Go back to home
+  };
+
+  return (
+    <motion.div
+      key="profile-view"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="p-0 md:p-0 text-white"
+    >
+      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
+        <ArrowLeft size={18} /> Back to Home
+      </button>
+      <h2 className="text-4xl font-bold text-center mb-10">Profile</h2>
+      <div className="max-w-md mx-auto flex flex-col items-center gap-6">
+        <div className="relative">
+          <img
+            src={localProfileImage}
+            alt="Profile"
+            className="w-40 h-40 rounded-full object-cover border-4 border-gray-700"
+            onError={(e) => e.target.src = 'https://placehold.co/150x150/222244/ffffff?text=Error'}
+          />
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleImageUploadClick}
+            className="absolute -bottom-2 -right-2 w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg border-2 border-gray-900"
+            aria-label="Change profile picture"
+          >
+            <Edit2 size={24} className="text-white" />
+          </motion.button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/png, image/jpeg"
+            className="hidden"
+          />
+        </div>
+        <div className="w-full">
+          <label className="block text-sm font-medium text-gray-400 mb-2 text-center">Nickname</label>
+          <input
+            type="text"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            placeholder="Enter your nickname"
+            className="w-full p-4 rounded-lg text-center font-medium text-white text-lg bg-gradient-to-r from-blue-500/30 to-purple-600/30 shadow-inner focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+        </div>
+        <div className="w-full mt-4">
+           <GradientButton text="Save Changes" onClick={handleSave} />
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+
+// =======================================================================
+//  SearchView
+// =======================================================================
 function SearchView({ setPage }) {
+  // ... (Code waisa hi hai) ...
   return (
     <motion.div key="search-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white">
@@ -279,8 +375,11 @@ function SearchView({ setPage }) {
   );
 }
 
-
+// =======================================================================
+//  DownloadsView
+// =======================================================================
 function DownloadsView({ setPage }) {
+  // ... (Code waisa hi hai) ...
   return (
     <motion.div key="downloads-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white">
@@ -291,12 +390,118 @@ function DownloadsView({ setPage }) {
   );
 }
 
+// =======================================================================
+//  NEW Tools View Sub-Component (Based on new screenshot)
+// =======================================================================
+function ToolsView({ setPage }) {
+  
+  // Placeholder function for tool click
+  const handleToolClick = (toolName) => {
+    // Yahan par hum future mein routing add kar sakte hain
+    // Abhi ke liye, yeh 'setPage' ka use karke ek specific tool page dikha sakta hai
+    // e.g., setPage(`tool-${toolName.toLowerCase()}`);
+    alert(`Navigating to ${toolName} tool... (Routing not implemented yet)`);
+    // Abhi ke liye routing ki jagah, hum wapas home par bhej dete hain
+    // setPage(null); 
+  };
+
+  return (
+    <motion.div
+      key="tools-view"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="p-0 md:p-0 text-white"
+    >
+      {/* Back button */}
+      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
+        <ArrowLeft size={18} /> Back to Home
+      </button>
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-10">
+        <h2 className="text-4xl font-bold text-center">Tools</h2>
+        <span className="bg-purple-600/50 text-purple-300 border border-purple-400 rounded-full px-4 py-1 text-sm font-semibold">
+          Special Features
+        </span>
+      </div>
+      
+      {/* Tools Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 ">
+        <ToolCard 
+          img={"/crope.png"}
+          width={20}
+          icon={<Crop size={48} />} 
+          title="Crop" 
+          onClick={() => handleToolClick('Crop')} 
+        />
+        <ToolCard 
+          img={"/extractere.png"}
+          width={20}
+          icon={<FileText size={48} />} 
+          title="Text Extractor" 
+          onClick={() => handleToolClick('Text Extractor')} 
+        />
+        <ToolCard 
+          img={"/jpgtopng.png"}
+          width={60}
+          icon={<Repeat size={48} />} 
+          title="Jpg to png" 
+          onClick={() => handleToolClick('Jpg to png')} 
+        />
+        <ToolCard 
+          img={"/pngtojpg.png"}
+          width={20}
+          icon={<RefreshCw size={48} />} 
+          title="Png to jpg" 
+          onClick={() => handleToolClick('Png to jpg')} 
+        />
+        <ToolCard 
+          img={"/magicbrushe.png"}
+          width={20}
+          icon={<Wand2 size={48} />} 
+          title="Magic Brush" 
+          onClick={() => handleToolClick('Magic Brush')} 
+        />
+        <ToolCard 
+          img={"/claritye.png"}
+          width={80}
+          icon={<Sun size={48} />} 
+          title="Clarity" 
+          onClick={() => handleToolClick('Clarity')} 
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+// =======================================================================
+//  NEW ToolCard Component
+// =======================================================================
+function ToolCard({img, icon, title, onClick, width }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05, y: -5 }}
+      onClick={onClick}
+      className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center gap-4 aspect-square cursor-pointer transition-all border-2 border-transparent hover:border-purple-500"
+    >
+      <div className="text-purple-400 flex flex-col items-center justify-center">
+        {/* <img src={img} alt="" className={`w-[${width}px]`} /> */}
+        {icon}
+      </div>
+      <h3 className="text-xl font-semibold text-white text-center">{title}</h3>
+    </motion.div>
+  );
+}
 
 
-function NavItem({ icon, text, active = false, onClick }) { 
+// =======================================================================
+//  INLINED COMPONENTS
+// =======================================================================
+function NavItem({ icon, text, active = false, onClick }) {
   const content = ( <> {icon} <span className="font-medium">{text}</span> </> );
   const classes = `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${ active ? 'bg-blue-600 text-white shadow-lg' : 'text-white/70 hover:bg-gray-700/50 hover:text-white' }`;
-  // Always use div with onClick now
   return ( <div onClick={onClick} className={classes}> {content} </div> );
 }
 
@@ -310,7 +515,7 @@ function BubblesBackground() {
       {bubbles.map((bubble) => (
         <motion.div
           key={bubble.id}
-          className="absolute bg-gradient-to-br from-blue-700 to-purple-700 opacity-40 rounded-full filter blur-3xl" // Was opacity-10
+          className="absolute bg-gradient-to-br from-blue-700 to-purple-700 opacity-20 rounded-full filter blur-3xl"
           style={{ width: bubble.size, height: bubble.size, top: bubble.y, left: bubble.x }}
           animate={{ x: [0, 50, -50, 0], y: [0, -50, 50, 0] }}
           transition={{ duration: bubble.duration, ease: "easeInOut", repeat: Infinity, repeatType: "mirror", delay: bubble.delay }}
@@ -319,16 +524,26 @@ function BubblesBackground() {
     </div>
   );
  }
-function GradientButton({ text, isBlue = false, isOutline = false, className = "" }) {
+
+// GradientButton (UPDATED with onClick)
+function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick }) {
   const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
   const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
   const outline = "bg-transparent border-2 border-purple-400 text-purple-300 hover:bg-purple-900/50";
   const buttonClasses = isOutline ? outline : (isBlue ? blueGradient : purpleGradient);
   const defaultClasses = "w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform";
   return (
-    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`${defaultClasses} ${buttonClasses} ${className}`}> {text} </motion.button>
+    <motion.button 
+      whileHover={{ scale: 1.05 }} 
+      whileTap={{ scale: 0.95 }} 
+      onClick={onClick} // Added onClick prop
+      className={`${defaultClasses} ${buttonClasses} ${className}`}
+    > 
+      {text} 
+    </motion.button>
   );
 }
+
 
 function SmallButton({ children, onClick, className = "" }) {
   return (
