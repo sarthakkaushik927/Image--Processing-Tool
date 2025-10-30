@@ -4,3 +4,26 @@
 * {
     font-family: 'Poppins', sans-serif;
 }
+/* Custom Scrollbar Styles for FotoFix */
+
+/* 1. Define the overall scrollbar appearance */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* 2. Define the background track */
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #121c3a; /* Deep blue/black background */
+}
+
+/* 3. Define the draggable handle (the "thumb") */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #7c3aed; /* Purple color matching your theme */
+    border-radius: 10px;
+    border: 2px solid #121c3a; /* Creates a small gap around the thumb */
+}
+
+/* 4. Define hover state */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9a66f0; /* Lighter purple on hover */
+}
