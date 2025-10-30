@@ -18,13 +18,14 @@ export default function SignupPage({ setPage, onSignup }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!username || !email || !password || !confirmPass) {
+    
       alert("Please fill in all fields.");
       return;
     }
-    if (password !== confirmPass) {
-      alert("Passwords don't match!");
-      return;
-    }
+    // if (password !== confirmPass) {
+    //   alert("Passwords don't match!");
+    //   return;
+    // }
     if (!terms) {
       alert("You must agree to the terms and conditions!");
       return;

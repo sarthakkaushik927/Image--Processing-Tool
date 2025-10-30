@@ -23,7 +23,7 @@ import AuthCard from './components/AuthCard.jsx';
 // =======================================================================
 //  API Configuration
 // =======================================================================
-const API_BASE_URL = 'https://user-registeration-and-user-login-1-vpa5.onrender.com';
+const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
 
 
 // =======================================================================
@@ -38,41 +38,41 @@ export default function App() {
 
   const handleLogin = async (email, password) => {
     console.log("Attempting login with:", { email, password });
-    /* // --- AXIOS API CALL - COMMENTED OUT ---
+   
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, { email, password });
       setIsAuthenticated(true); 
       setPage(null); // Go to Home
     } catch (error) {
       alert(error.response?.data?.message || "Login failed.");
       throw error; 
     }
-    */
+    
     // Simulate login
-    return new Promise(resolve => setTimeout(() => {
-        setIsAuthenticated(true);
-        setPage(null); // Go to Home
-        resolve();
-     }, 500));
-  };
+  //   return new Promise(resolve => setTimeout(() => {
+  //       setIsAuthenticated(true);
+  //       setPage(null); // Go to Home
+  //       resolve();
+  //    }, 500));
+   };
 
   const handleSignup = async (username, email, password) => {
     console.log("Attempting signup with:", { username, email, password });
-    /* // --- AXIOS API CALL - COMMENTED OUT ---
+    
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/register`, { username, email, password });
+      await axios.post(`${API_BASE_URL}/api/v1/auth/register`, { username, email, password });
       alert("Signup successful! Please log in.");
       setPage('login'); // Signup ke baad login page par bhejein
     } catch (error) {
       alert(error.response?.data?.message || "Signup failed.");
       throw error;
     }
-    */
-    // Simulate signup
-     return new Promise(resolve => setTimeout(() => {
-        setPage('login');
-        resolve();
-     }, 500));
+    
+  //   // Simulate signup
+  //    return new Promise(resolve => setTimeout(() => {
+  //       setPage('login');
+  //       resolve();
+  //    }, 500));
   };
 
   const handleForgotPassword = async (email) => {
