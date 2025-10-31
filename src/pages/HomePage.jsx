@@ -284,7 +284,7 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
     <nav 
       className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#1c1c3a] via-[#1c1c3a]/90 to-transparent"
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <div className="max-w-auto mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center py-4">
           
           <motion.div 
@@ -491,12 +491,14 @@ function MainView({ setShowHelp, setPage, isAuthenticated }) {
   
   return (
     <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-      className="flex flex-col lg:flex-row items-center gap-10 md:gap-20" >
-      <div className="flex-1 text-center lg:text-center">
+      className="flex flex-col lg:flex-row items-center gap-10 md:gap-20 lg:gap-40 justify-center py-20" >
+      <div className="flex flex-col gap-8 text-center lg:text-center">
+        <div>
         <h2 className="text-4xl md:text-5xl font-bold">Edit, Enhance and Empower!</h2>
-        <p className="text-lg text-gray-400 mt-4 mb-8"> Experience seamless image processing </p>
+        <p className="text-lg text-gray-400 mt-4 mb-8"> Experience seamless image processing </p></div>
         <div className="flex flex-col items-center lg:items-center gap-4">
-          <div className="flex items-center gap-4">
+          <div className=''>
+          <div className="flex items-center gap-4 my-4">
             {/* ⬇️ NAYA 'onClick' HANDLER YAHAN HAI ⬇️ */}
             <GradientButton className='lg:px-20' text="Discover" isBlue onClick={() => setPage('discover')}/>
             <GradientButton className='lg:px-20' text="Create" isOutline onClick={handleCreateClick} />
@@ -517,6 +519,7 @@ function MainView({ setShowHelp, setPage, isAuthenticated }) {
           <SmallButton className="h-16" onClick={() => setShowHelp(true)}>
             <span className="font-semibold px-6">Help?</span>
           </SmallButton>
+          </div>
         </div>
 
       </div>
@@ -858,10 +861,10 @@ function DiscoverView({ setPage }) {
 
   // Mock data for community gallery
   const communityCreations = [
-    { id: 1, url: 'https://placehold.co/600x800/6366F1/white?text=Art+1', title: 'Cyberpunk City', author: 'User123' },
-    { id: 2, url: 'https://placehold.co/600x600/EC4899/white?text=Art+2', title: 'Forest Dream', author: 'PixelQueen' },
-    { id: 3, url: 'https://placehold.co/600x400/8B5CF6/white?text=Art+3', title: 'Ocean Sunset', author: 'EditMaster' },
-    { id: 4, url: 'https://placehold.co/600x700/F00000/white?text=Art+4', title: 'Red Desert', author: 'FotoFan' },
+    { id: 1, url: '/1.svg', title: 'Spooky City', author: 'User123' },
+    { id: 2, url: '/2.svg', title: 'Living Dream', author: 'PixelQueen' },
+    { id: 3, url: '/3.svg', title: 'Ocean Sunset', author: 'EditMaster' },
+    { id: 4, url: '/4.svg', title: 'Asthetic Rain', author: 'FotoFan' },
   ];
 
   // Mock data for tutorials
@@ -869,6 +872,7 @@ function DiscoverView({ setPage }) {
     { id: 1, title: 'Master Adjustments', description: 'Learn how to use brightness, contrast, and saturation.', icon: <Sun size={24} />, page: 'adjustments' },
     { id: 2, title: 'Perfect Cropping', description: 'Get the perfect frame for your photos.', icon: <Crop size={24} />, page: 'crop' },
     { id: 3, title: 'Remove Backgrounds', description: 'Cut out subjects with one click.', icon: <Wand2 size={24} />, page: 'magic-brush' },
+    { id: 3, title: 'Convert Images', description: 'Convert to JPG, PNG, WEBP...', icon: <Repeat size={24} />, page: 'format-converter' },
   ];
 
   return (
@@ -888,7 +892,7 @@ function DiscoverView({ setPage }) {
 
       {/* Section 1: Tutorials */}
       <h2 className="text-3xl font-semibold text-purple-300 mb-4">Learn the Tools</h2>
-      <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
+      <div className="flex gap-6 overflow-x-auto  pb-6 -mx-6 px-6 pt-6">
         {tutorials.map(tutorial => (
           <TutorialCard 
             key={tutorial.id}
@@ -902,7 +906,7 @@ function DiscoverView({ setPage }) {
 
       {/* Section 2: Community Gallery */}
       <h2 className="text-3xl font-semibold text-purple-300 mt-12 mb-4">Community Gallery</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 overflow-y-clip">
         {communityCreations.map(item => (
           <CommunityImageCard 
             key={item.id}
