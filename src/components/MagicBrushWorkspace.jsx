@@ -25,41 +25,60 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
     );
 }
 
-export default function MagicBrushWorkspace({ setPage }) {
-    const [originalImage, setOriginalImage] = useState(null);
-    const [processedImageURL, setProcessedImageURL] = useState(null);
+// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
+export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
+    const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
+    const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
     const [isLoading, setIsLoading] = useState(false);
+    const [fileName, setFileName] = useState("image.png");
 
-    // API and Handler logic here (similar to TextExtractor)
+    // ⬇️ STEP 2: 'handleImageUpload' ko 'FileReader' use karne ke liye update karein
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
+            setFileName(file.name);
             setProcessedImageURL(null);
-            setOriginalImage(URL.createObjectURL(file));
+            const reader = new FileReader();
+            reader.onload = (e) => setOriginalImage(e.target.result); // ⬅️ dataUrl
+            reader.readAsDataURL(file);
         }
     };
     
+    // Simulates API call
     const handleConvert = async () => {
         if (!originalImage) return;
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 3000));
-        setProcessedImageURL(originalImage); 
+        setProcessedImageURL(originalImage); // ⬅️ Simulation: Processed image is same as original (dataUrl)
         setIsLoading(false);
         alert("Magic conversion complete.");
     };
 
+    // ⬇️ STEP 3: 'handleDownload' function ko update karein
     const handleDownload = () => {
         if (!processedImageURL) return;
-        // Simplified download logic for demonstration
+        
+        const downloadName = `magic_brush_${fileName}`;
+
+        // 1. ⭐️ HomePage ko 'dataUrl' bhej dein (Storage ke liye) ⭐️
+        if (onImageDownloaded) {
+            onImageDownloaded(processedImageURL, downloadName);
+        }
+
+        // 2. User ke liye download trigger karein
         const link = document.createElement('a');
         link.href = processedImageURL;
-        link.download = `magic_brush_output.png`; 
+        link.download = downloadName; 
         link.click();
     };
 
     return (
         <motion.div
             key="magic-brush-workspace"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white max-w-2xl mx-auto"
         >
             <div className="flex items-center gap-4 text-gray-400 mb-6">
@@ -87,7 +106,7 @@ export default function MagicBrushWorkspace({ setPage }) {
                     <label htmlFor="magic-upload" className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
                         <UploadCloud size={20} /> Upload Image
                     </label>
-                    <GradientButton text={isLoading ? "Converting..." : "Convert"} onClick={handleConvert} isBlue disabled={!originalImage || isLoading} icon={isLoading ? Loader2 : Wand2} />
+                    <GradientButton text={isLoading ? "Applying..." : "Apply Magic"} onClick={handleConvert} isBlue disabled={!originalImage || isLoading} icon={isLoading ? Loader2 : Wand2} />
                     <GradientButton text="Download" onClick={handleDownload} disabled={!processedImageURL} icon={Download} />
                 </div>
             </div>

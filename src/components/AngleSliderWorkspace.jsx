@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Repeat, UploadCloud } from 'lucide-react';
+// ⬇️ 'Download' icon add karein
+import { ArrowLeft, Repeat, UploadCloud, Download } from 'lucide-react';
 
-function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled }) {
+function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled, icon: Icon }) {
     // ... (Use the same GradientButton definition from above converters) ...
     const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
     const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
@@ -19,25 +20,80 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
             disabled={disabled}
             className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
         > 
+            {/* ⬇️ Icon ke liye check add karein ⬇️ */}
+            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />}
             {text} 
         </motion.button>
     );
 }
 
-export default function AngleSliderWorkspace({ setPage }) {
-    const [imageSrc, setImageSrc] = useState(null);
+// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
+export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
+    const [imageSrc, setImageSrc] = useState(null); // Yeh dataUrl hoga
     const [angle, setAngle] = useState(0); // -180 to 180 degrees
+    const [fileName, setFileName] = useState("image.png");
+    const imgRef = useRef(null); // ⬅️ Naya imgRef
 
+    // ⬇️ STEP 2: 'handleImageUpload' ko 'FileReader' use karne ke liye update karein
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
-            setImageSrc(URL.createObjectURL(file));
+            setFileName(file.name);
+            const reader = new FileReader();
+            reader.onload = (e) => setImageSrc(e.target.result); // ⬅️ dataUrl
+            reader.readAsDataURL(file);
         }
+    };
+
+    // ⬇️ STEP 3: Naya 'handleDownload' function implement karein
+    const handleDownload = () => {
+        const image = imgRef.current;
+        if (!image || !imageSrc) {
+            alert("Please upload an image first.");
+            return;
+        }
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const w = image.naturalWidth;
+        const h = image.naturalHeight;
+        const angleRad = angle * (Math.PI / 180);
+        
+        // Canvas ka size rotated image ke according set karein
+        const absSin = Math.abs(Math.sin(angleRad));
+        const absCos = Math.abs(Math.cos(angleRad));
+        canvas.width = w * absCos + h * absSin;
+        canvas.height = w * absSin + h * absCos;
+        
+        // Center par translate karein, rotate karein, aur image ko draw karein
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(angleRad);
+        ctx.drawImage(image, -w / 2, -h / 2, w, h);
+        
+        // Data URL generate karein
+        const dataUrl = canvas.toDataURL('image/png');
+        const downloadName = `rotated_${fileName}`;
+        
+        // Storage mein save karein
+        if (onImageDownloaded) {
+            onImageDownloaded(dataUrl, downloadName);
+        }
+        
+        // Download trigger karein
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = downloadName;
+        link.click();
     };
 
     return (
         <motion.div
             key="angle-slider-workspace"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white max-w-2xl mx-auto"
         >
             <div className="flex items-center gap-4 text-gray-400 mb-6">
@@ -56,6 +112,8 @@ export default function AngleSliderWorkspace({ setPage }) {
                 <div className="w-full h-72 flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
                     {imageSrc ? (
                         <img 
+                            ref={imgRef} // ⬅️ ref add karein
+                            crossOrigin="anonymous" // ⬅️ canvas ke liye zaroori
                             src={imageSrc} 
                             alt="Input" 
                             className="max-w-full max-h-full object-contain transition-transform duration-100 ease-linear"
@@ -84,7 +142,14 @@ export default function AngleSliderWorkspace({ setPage }) {
                     <label htmlFor="angle-upload" className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
                         <UploadCloud size={20} /> Upload Image
                     </label>
-                    <GradientButton text="Download Result" onClick={() => alert('Download final rotated image via Canvas!')} isBlue disabled={!imageSrc} />
+                    {/* ⬇️ STEP 4: Download button ko update karein ⬇️ */}
+                    <GradientButton 
+                        text="Download Result" 
+                        onClick={handleDownload} 
+                        isBlue 
+                        disabled={!imageSrc}
+                        icon={Download} // ⬅️ icon add karein
+                    />
                 </div>
             </div>
         </motion.div>

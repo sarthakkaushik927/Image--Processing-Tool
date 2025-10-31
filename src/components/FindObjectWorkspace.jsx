@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Search, UploadCloud, Loader2 } from 'lucide-react';
+// ⬇️ 'Download' icon add karein
+import { ArrowLeft, Search, UploadCloud, Loader2, Download } from 'lucide-react';
 
 function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled, icon: Icon }) {
     // ... (Use the same GradientButton definition from above converters) ...
@@ -25,17 +26,22 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
     );
 }
 
-export default function FindObjectWorkspace({ setPage }) {
-    const [originalImage, setOriginalImage] = useState(null);
-    const [processedImageURL, setProcessedImageURL] = useState(null);
+// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
+export default function FindObjectWorkspace({ setPage, onImageDownloaded }) {
+    const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
+    const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
     const [isLoading, setIsLoading] = useState(false);
+    const [fileName, setFileName] = useState("image.png");
 
-    // API and Handler logic here (similar to TextExtractor)
+    // ⬇️ STEP 2: 'handleImageUpload' ko 'FileReader' use karne ke liye update karein
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
+            setFileName(file.name);
             setProcessedImageURL(null);
-            setOriginalImage(URL.createObjectURL(file));
+            const reader = new FileReader();
+            reader.onload = (e) => setOriginalImage(e.target.result); // ⬅️ dataUrl
+            reader.readAsDataURL(file);
         }
     };
     
@@ -44,14 +50,36 @@ export default function FindObjectWorkspace({ setPage }) {
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 3000));
         // Simulate API returning image with bounding boxes
-        setProcessedImageURL(originalImage); 
+        setProcessedImageURL(originalImage); // ⬅️ Simulation: Processed image is same as original (dataUrl)
         setIsLoading(false);
         alert("Object detection complete. Result displayed.");
+    };
+
+    // ⬇️ STEP 3: Naya 'handleDownload' function add karein
+    const handleDownload = () => {
+        if (!processedImageURL) return;
+        
+        const downloadName = `find_object_${fileName}`;
+
+        // 1. ⭐️ HomePage ko 'dataUrl' bhej dein (Storage ke liye) ⭐️
+        if (onImageDownloaded) {
+            onImageDownloaded(processedImageURL, downloadName);
+        }
+
+        // 2. User ke liye download trigger karein
+        const link = document.createElement('a');
+        link.href = processedImageURL;
+        link.download = downloadName; 
+        link.click();
     };
 
     return (
         <motion.div
             key="find-object-workspace"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white max-w-2xl mx-auto"
         >
             <div className="flex items-center gap-4 text-gray-400 mb-6">
@@ -75,11 +103,19 @@ export default function FindObjectWorkspace({ setPage }) {
                     )}
                 </div>
                 <input type="file" id="find-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
+                
+                {/* ⬇️ STEP 4: Naya Download button add karein ⬇️ */}
                 <div className="flex flex-wrap justify-center gap-4 w-full">
                     <label htmlFor="find-upload" className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
                         <UploadCloud size={20} /> Upload Image
                     </label>
                     <GradientButton text={isLoading ? "Finding..." : "Find"} onClick={handleFind} isBlue disabled={!originalImage || isLoading} icon={isLoading ? Loader2 : Search} />
+                    <GradientButton 
+                        text="Download Result" 
+                        onClick={handleDownload} 
+                        disabled={!processedImageURL || isLoading} 
+                        icon={Download} 
+                    />
                 </div>
             </div>
         </motion.div>

@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css'; 
 import {
-  ArrowLeft, Crop, UploadCloud, Download,
+  ArrowLeft, Crop, UploadCloud, Download,
 } from 'lucide-react';
 
 // =======================================================================
-//  AUXILIARY COMPONENT (Must be defined before it's used)
+//  AUXILIARY COMPONENT (Must be defined before it's used)
 // =======================================================================
 function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled }) {
   const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
@@ -31,9 +31,10 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
 }
 
 // =======================================================================
-//  Crop Workspace Component
+//  Crop Workspace Component
 // =======================================================================
-export default function CropWorkspace({ setPage }) {
+// ⬇️ 'onImageDownloaded' prop ko yahan accept karein
+export default function CropWorkspace({ setPage, onImageDownloaded }) {
   // === 1. State and Refs ===
   const [imageSrc, setImageSrc] = useState(null);
   const imgRef = useRef(null);
@@ -41,7 +42,7 @@ export default function CropWorkspace({ setPage }) {
   const [completedCrop, setCompletedCrop] = useState(null);
   const [aspect, setAspect] = useState(0); 
 
-  // === 2. Handler Functions (Defined BEFORE JSX use) ===
+  // === 2. Handler Functions ===
   
   // Handles image upload
   const handleImageUpload = (e) => {
@@ -74,88 +75,70 @@ export default function CropWorkspace({ setPage }) {
     setCrop(initialCrop);
   };
   
-  // Handles Apply Crop button click (Placeholder for canvas logic)
+  // Handles Apply Crop button click
   const handleApplyCrop = () => {
     if (!completedCrop || !imgRef.current) {
         alert("Please load an image and define a crop area first.");
         return;
     }
-    
-    // Logic for applying crop (in a real app, this might just trigger the download)
     console.log("Applying crop:", completedCrop);
     alert(`Crop Applied! Ready for download. Size: ${Math.round(completedCrop.width)} x ${Math.round(completedCrop.height)}`);
   };
 
-  // Handles Download button click
- // src/components/CropWorkspace.js (Replace the existing handleDownload)
+  // ⬇️ --- (FIXED) 'handleDownload' FUNCTION --- ⬇️
+  const handleDownload = () => {
+      // 1. Basic Checks
+      if (!completedCrop || !imgRef.current || !imageSrc) {
+          alert("No image loaded or no crop area defined.");
+          return;
+      }
 
-const handleDownload = () => {
-    // 1. Basic Checks
-    if (!completedCrop || !imgRef.current || !imageSrc) {
-        alert("No image loaded or no crop area defined.");
-        return;
-    }
+      const image = imgRef.current;
+      
+      // 2. Scale aur Canvas setup
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+      const canvas = document.createElement('canvas');
+      canvas.width = completedCrop.width * scaleX;
+      canvas.height = completedCrop.height * scaleY;
+      const ctx = canvas.getContext('2d');
 
-    const image = imgRef.current;
-    
-    // Get the image's original (natural) dimensions
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    
-    // Create an off-screen canvas element
-    const canvas = document.createElement('canvas');
-    
-    // Calculate the canvas dimensions based on the completed crop area 
-    // and the original image's scale.
-    canvas.width = completedCrop.width * scaleX;
-    canvas.height = completedCrop.height * scaleY;
+      if (!ctx) {
+          alert("Canvas context failed to initialize.");
+          return;
+      }
+      
+      // 3. Cropped section draw karein
+      ctx.drawImage(
+          image,
+          completedCrop.x * scaleX,         // Source X
+          completedCrop.y * scaleY,         // Source Y
+          completedCrop.width * scaleX,     // Source Width
+          completedCrop.height * scaleY,    // Source Height
+          0,                                // Destination X
+          0,                                // Destination Y
+          canvas.width,                     // Destination Width
+          canvas.height                     // Destination Height
+      );
 
-    const ctx = canvas.getContext('2d');
+      // 4. ⬇️ Data URL banayein (toBlob ki jagah) ⬇️
+      const mimeType = 'image/png';
+      const dataUrl = canvas.toDataURL(mimeType); // ⬅️ YEH HAI BADLAV
+      const filename = 'fotofix_cropped_image.png';
 
-    if (!ctx) {
-        alert("Canvas context failed to initialize.");
-        return;
-    }
-    
-    // 2. Draw the Cropped Section
-    // The image.naturalWidth/Height ensures the canvas is drawn using 
-    // the high-resolution source image, not the scaled-down preview.
-    ctx.drawImage(
-        image,
-        completedCrop.x * scaleX,          // Source X
-        completedCrop.y * scaleY,          // Source Y
-        completedCrop.width * scaleX,      // Source Width
-        completedCrop.height * scaleY,     // Source Height
-        0,                                 // Destination X (start at top-left of canvas)
-        0,                                 // Destination Y
-        canvas.width,                      // Destination Width (full canvas size)
-        canvas.height                      // Destination Height
-    );
+      // 5. ⭐️ HomePage ko 'dataUrl' bhej dein ⭐️
+      if (onImageDownloaded) {
+          onImageDownloaded(dataUrl, filename); // ⬅️ YAHAN 'dataUrl' PASS KAREIN
+      }
 
-    // 3. Trigger Download
-    
-    // Convert canvas content to a PNG data URL (or JPEG for photos)
-    const mimeType = 'image/png';
-    const quality = 1.0; // 1.0 is highest quality (only used for JPEG/WebP)
-
-    canvas.toBlob((blob) => {
-        if (!blob) {
-            alert('Failed to create image blob for download.');
-            return;
-        }
-
-        const link = document.createElement('a');
-        link.download = 'fotofix_cropped_image.png';
-        link.href = URL.createObjectURL(blob);
-        
-        // Use a short delay or click event dispatch for compatibility
-        setTimeout(() => {
-            link.click();
-            URL.revokeObjectURL(link.href); // Clean up the URL object
-        }, 100);
-
-    }, mimeType, quality);
-};
+      // 6. Download trigger karein (ab 'dataUrl' se)
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl; // ⬅️ YAHAN BHI 'dataUrl' USE KAREIN
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+  };
 
   // Handles Aspect Ratio changes
   const handleAspectChange = (e) => {

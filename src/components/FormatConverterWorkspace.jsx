@@ -8,8 +8,8 @@ const FORMATS = {
     'jpg': { mime: 'image/jpeg', label: 'JPEG (Lossy)' },
     'webp': { mime: 'image/webp', label: 'WebP (Modern)' },
     'bmp': { mime: 'image/bmp', label: 'BMP (Legacy)' },
-    'gif': { mime: 'image/gif', label: 'GIF (Animated/Legacy)' }, // ⬅️ NEW FORMAT
-    'tiff': { mime: 'image/tiff', label: 'TIFF (High Quality)' }  // ⬅️ NEW FORMAT
+    'gif': { mime: 'image/gif', label: 'GIF (Animated/Legacy)' },
+    'tiff': { mime: 'image/tiff', label: 'TIFF (High Quality)' }
 };
 
 // --- AUXILIARY COMPONENT (Reuse) ---
@@ -36,24 +36,30 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
 }
 
 // =======================================================================
-//  Unified Format Converter Workspace
+//  Unified Format Converter Workspace
 // =======================================================================
-export default function FormatConverterWorkspace({ setPage }) {
+// ⬇️ 'onImageDownloaded' prop ko yahan accept karein
+export default function FormatConverterWorkspace({ setPage, onImageDownloaded }) {
     const [imageSrc, setImageSrc] = useState(null);
     const [originalFileName, setOriginalFileName] = useState("");
-    const [outputFormat, setOutputFormat] = useState('png'); // Default output
+    const [outputFormat, setOutputFormat] = useState('png');
     const [isConverting, setIsConverting] = useState(false);
     
-    const imgUrlRef = useRef(null); 
+    const imgUrlRef = useRef(null); // Yeh 'blob:' URL rakhega
 
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
+            // Purana blob URL (agar hai) memory se clean karein
+            if (imgUrlRef.current) {
+                URL.revokeObjectURL(imgUrlRef.current);
+            }
+
             const url = URL.createObjectURL(file);
-            imgUrlRef.current = url; 
+            imgUrlRef.current = url; // Naya blob URL save karein
             setImageSrc(url);
             setOriginalFileName(file.name);
-            // Default to PNG if input is JPG, otherwise default to JPG
+            
             if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
                 setOutputFormat('png');
             } else {
@@ -62,8 +68,9 @@ export default function FormatConverterWorkspace({ setPage }) {
         }
     };
 
+    // ⬇️ --- (FIXED) 'handleConversion' FUNCTION --- ⬇️
     const handleConversion = () => {
-        const currentUrl = imgUrlRef.current;
+        const currentUrl = imgUrlRef.current; // Yeh 'blob:http://...' URL hai
         if (!currentUrl || !outputFormat) return;
 
         setIsConverting(true);
@@ -72,6 +79,7 @@ export default function FormatConverterWorkspace({ setPage }) {
         img.crossOrigin = "anonymous"; 
         
         img.onload = () => {
+            // 1. Canvas setup
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
@@ -84,7 +92,6 @@ export default function FormatConverterWorkspace({ setPage }) {
             }
 
             try {
-                // Draw the image
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             } catch (error) {
                 console.error("Error drawing image to canvas:", error);
@@ -93,47 +100,44 @@ export default function FormatConverterWorkspace({ setPage }) {
                 return;
             }
 
-            // Get MIME type and extension
+            // 2. Format info
             const formatInfo = FORMATS[outputFormat];
             const mimeType = formatInfo.mime;
-            
-            // Quality is important only for lossy formats (JPEG/WebP)
             const quality = (outputFormat === 'jpg' || outputFormat === 'webp') ? 0.9 : undefined; 
 
-            // Convert canvas data to Blob
-            canvas.toBlob((blob) => {
-                if (!blob) {
-                    alert(`Conversion failed: Could not create ${outputFormat.toUpperCase()} data. Ensure the browser supports this format for conversion.`);
-                    setIsConverting(false);
-                    return;
-                }
-                
-                const url = URL.createObjectURL(blob);
-                
-                // 1. Determine new filename
-                const baseName = originalFileName.replace(/\.[^/.]+$/, "");
-                const newFileName = `${baseName}.${outputFormat}`;
+            // 3. ⬇️ Data URL banayein (toBlob ki jagah) ⬇️
+            const dataUrl = canvas.toDataURL(mimeType, quality); // ⬅️ YEH HAI BADLAV
+            const baseName = originalFileName.replace(/\.[^/.]+$/, "");
+            const newFileName = `${baseName}.${outputFormat}`;
 
-                // 2. Trigger Download
-                const link = document.createElement('a');
-                link.download = newFileName;
-                link.href = url;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // 3. Schedule cleanup and state update
-                setTimeout(() => {
-                    URL.revokeObjectURL(currentUrl);
-                    URL.revokeObjectURL(url);
-                    setImageSrc(null);
-                    imgUrlRef.current = null;
-                    setIsConverting(false);
-                }, 50); 
+            // 4. ⭐️ HomePage ko 'dataUrl' bhej dein ⭐️
+            if (onImageDownloaded) {
+                onImageDownloaded(dataUrl, newFileName); // ⬅️ YAHAN 'dataUrl' PASS KAREIN
+            }
 
-            }, mimeType, quality);
+            // 5. Download trigger karein (ab 'dataUrl' se)
+            const link = document.createElement('a');
+            link.download = newFileName;
+            link.href = dataUrl; // ⬅️ YAHAN BHI 'dataUrl' USE KAREIN
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // 6. Cleanup (Sirf original blob URL ko revoke karein)
+            setTimeout(() => {
+                URL.revokeObjectURL(currentUrl);
+                setImageSrc(null);
+                imgUrlRef.current = null;
+                setIsConverting(false);
+            }, 50); 
         };
-        // Use a slight delay to ensure React state updates are processed
+
+        img.onerror = () => {
+             alert("Failed to load the image for conversion. It might be a network issue.");
+             setIsConverting(false);
+        };
+        
+        // Timeout ke saath img.src set karein
         setTimeout(() => {
             img.src = currentUrl; 
         }, 0); 

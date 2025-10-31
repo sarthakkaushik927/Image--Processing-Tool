@@ -23,18 +23,19 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
             disabled={disabled}
             className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
         > 
-            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />} 
+            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />}
             {text} 
         </motion.button>
     );
 }
 
 // =======================================================================
-//  Text Extractor Workspace Component
+//  Text Extractor Workspace Component
 // =======================================================================
-export default function TextExtractorWorkspace({ setPage }) {
-    const [originalImage, setOriginalImage] = useState(null);
-    const [processedImageURL, setProcessedImageURL] = useState(null);
+// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
+export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
+    const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
+    const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
     const [isLoading, setIsLoading] = useState(false);
     const [fileName, setFileName] = useState("image.png");
 
@@ -45,9 +46,9 @@ export default function TextExtractorWorkspace({ setPage }) {
         const file = e.target.files && e.target.files[0];
         if (file) {
             setFileName(file.name);
-            setProcessedImageURL(null); // Reset processed image on new upload
+            setProcessedImageURL(null); 
             const reader = new FileReader();
-            reader.onload = (e) => setOriginalImage(e.target.result);
+            reader.onload = (e) => setOriginalImage(e.target.result); // ⬅️ dataUrl
             reader.readAsDataURL(file);
         }
     };
@@ -60,40 +61,34 @@ export default function TextExtractorWorkspace({ setPage }) {
         }
 
         setIsLoading(true);
-        setProcessedImageURL(null); // Clear previous result
-
+        setProcessedImageURL(null); 
         console.log(`Sending image for ML processing: ${fileName}`);
-
-        // --- PLACEHOLDER API CALL LOGIC ---
-        // 
-        // 1. In a real app, you would convert the base64 image data (originalImage) 
-        //    back into a Blob/File and POST it to your backend API.
-        // 2. The backend would run the ML model and return the resulting image data 
-        //    (e.g., a new image URL or a base64 string).
         
-        // Simulating network delay and API response:
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Simulating the ML model returning a processed image (using the same input image as a stand-in)
-        // In reality, this URL would point to the image with bounding boxes or extracted text data.
-        const mockProcessedURL = originalImage; // Use the same image for demonstration
+        // Simulating the ML model returning a processed image
+        const mockProcessedURL = originalImage; // ⬅️ Yeh pehle se hi dataUrl hai
         
-        // ------------------------------------
-
         setProcessedImageURL(mockProcessedURL);
         setIsLoading(false);
         console.log("ML Processing Complete.");
     };
 
-    // 3. Handles Download
+    // ⬇️ STEP 3: 'handleDownload' function ko update karein
     const handleDownload = () => {
         if (!processedImageURL) return;
 
-        // Use the native browser download mechanism
+        const downloadName = `fotofix_processed_${fileName}`;
+
+        // 1. ⭐️ HomePage ko 'dataUrl' bhej dein (Storage ke liye) ⭐️
+        if (onImageDownloaded) {
+            onImageDownloaded(processedImageURL, downloadName);
+        }
+
+        // 2. User ke liye download trigger karein
         const link = document.createElement('a');
         link.href = processedImageURL;
-        // Rename the downloaded file to clearly indicate it's the processed output
-        link.download = `fotofix_processed_${fileName}`; 
+        link.download = downloadName; 
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -110,14 +105,14 @@ export default function TextExtractorWorkspace({ setPage }) {
             transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white"
         >
-            {/* Top Bar (Matching Screenshot) */}
+            {/* Top Bar */}
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
                     <ArrowLeft size={24} /> <span className="text-xl font-medium">Tools</span>
                 </button>
             </div>
 
-            {/* Tool Title (Matching Screenshot) */}
+            {/* Tool Title */}
             <div className="flex flex-col items-center justify-center mb-10">
                 <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
                     <FileText size={48} className="text-purple-400" />

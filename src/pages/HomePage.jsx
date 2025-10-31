@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import localforage from 'localforage'; // 'localForage' import
 
 // ⬇️ ESSENTIAL: Importing all external components ⬇️
 import CropWorkspace from '../components/CropWorkspace';
 import TextExtractorWorkspace from '../components/TextExtractorWorkspace';
-import JpgToPngWorkspace from '../components/JpgToPngWorkspace';
-import PngToJpgWorkspace from '../components/PngToJpgWorkspace';
 import FindObjectWorkspace from '../components/FindObjectWorkspace';
 import MagicBrushWorkspace from '../components/MagicBrushWorkspace';
 import SharpnessWorkspace from '../components/SharpnessWorkspace';
@@ -16,201 +15,359 @@ import DobbyChat from '../components/DobbyChat';
 import DobbyIntro from '../components/DobbyIntro';
 import AdjustmentsWorkspace from '../components/AdjustmentsWorkspace';
 import FormatConverterWorkspace from '../components/FormatConverterWorkspace';
-// NOTE: Assuming AccountPage is used directly for 'account' view, or is defined elsewhere.
 import AccountPage from '../pages/AccountPage'; 
 
 import {
-  Search, LogOut, ArrowLeft, Rocket, Wrench, FileText, Settings,
-  LifeBuoy, Star, Home, Download, UserCircle, UploadCloud, Edit,
-  PlusCircle, BookOpen, Menu, X,
-  ChevronRight, Edit2,
-  Crop, Repeat, RefreshCw, Wand2, Sun // Lucide icons used across the app
+  Search, LogOut, ArrowLeft, Rocket, Wrench, FileText, Settings,
+  LifeBuoy, Star, Home, Download, UserCircle, UploadCloud, Edit,
+  PlusCircle, BookOpen, Menu, X, // 'X' icon delete ke liye
+  ChevronRight, Edit2, LogIn, Trash2, // ⬅️ 'Trash2' icon add kiya hai
+  Crop, Repeat, RefreshCw, Wand2, Sun // Lucide icons
 } from 'lucide-react';
 
+// localForage storage ka naam configure karein
+localforage.config({
+  name: 'FotoFixDB',
+  storeName: 'downloaded_images_store'
+});
+
 
 // =======================================================================
-//  Home Page (Main Component - Handles Splash Screen)
+//  Home Page (Main Component)
 // =======================================================================
-// NOTE: Added userEmail to props to be passed down
-export default function HomePage({ isAuthenticated, onLogout, setPage, page, username, setUsername, profileImage, setProfileImage, userEmail }) {
-  const [showHelp, setShowHelp] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
+export default function HomePage({ 
+    isAuthenticated, onLogin, onLogout, 
+    setPage, page, 
+    username, setUsername, 
+    profileImage, setProfileImage, 
+    userEmail,
+    onSaveDownload 
+}) {
+  const [showHelp, setShowHelp] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [downloadedImages, setDownloadedImages] = useState([]);
+  const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
-  useEffect(() => {
-    // Splash Screen Timer: Only show for 2 seconds when component mounts
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
+  // DATA LOAD KARNE KA useEffect
+  useEffect(() => {
+    const loadImagesFromStorage = async () => {
+      try {
+        const storedImages = await localforage.getItem('fotofix-downloads');
+        if (storedImages && Array.isArray(storedImages)) {
+          setDownloadedImages(storedImages);
+        }
+      } catch (err) {
+        console.error("Failed to load images from storage:", err);
+      } finally {
+        setIsStorageLoaded(true);
+      }
+    };
+    loadImagesFromStorage();
+  }, []);
 
-    return () => clearTimeout(timer); // Cleanup timer 
-  }, [isAuthenticated]);
+  // DATA SAVE KARNE KA useEffect
+  useEffect(() => {
+    if (isStorageLoaded) { 
+      localforage.setItem('fotofix-downloads', downloadedImages).catch(err => {
+        console.error("Failed to save images to IndexedDB:", err);
+      });
+    }
+  }, [downloadedImages, isStorageLoaded]); 
 
-  useEffect(() => {
-    // Reset showHelp whenever navigation page changes
-    if (page !== null || page === 'about' || page === 'dobby-intro' || page === 'dobby-chat' || page === 'account' || page === 'downloads' || page === 'search' || page === 'profile' || page === 'tools' || page === 'crop' || page === 'text-extractor' || page === 'jpg-to-png' || page === 'png-to-jpg' || page === 'find-object' || page === 'magic-brush' || page === 'sharpness' || page === 'angle-slider') {
-      setShowHelp(false);
-    }
-  }, [page]);
+  // Nayi image ko list mein add karne ka handler
+  const handleImageDownload = (imageUrl, name = 'edited-image.png') => {
+    const newImage = { id: Date.now(), url: imageUrl, name: name };
+    setDownloadedImages(prevImages => [newImage, ...prevImages]);
+    
+    // Yahan App.jsx se mile onSaveDownload ko call karein
+    if (onSaveDownload) {
+      onSaveDownload(imageUrl, name);
+    } else {
+      console.warn("onSaveDownload prop is missing from HomePage.");
+    }
+  };
+
+  // DELETE IMAGE HANDLER
+  const handleDeleteImage = (idToDelete) => {
+    setDownloadedImages(prevImages => 
+      prevImages.filter(image => image.id !== idToDelete)
+    );
+  };
+
+  // DELETE ALL HANDLER
+  const handleDeleteAllImages = () => {
+    setDownloadedImages([]);
+  };
+
+  // Splash Screen Timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 2000);
+    return () => clearTimeout(timer); 
+  }, [isAuthenticated]);
+
+  // Reset showHelp on page change
+  useEffect(() => {
+    if (page !== null) {
+      setShowHelp(false);
+    }
+  }, [page]);
 
 
-  // ⬇️ RENDER SPLASH SCREEN IF ACTIVE ⬇️
-  if (showSplash) {
-    return <SplashPage />;
-  }
+  // RENDER SPLASH SCREEN IF ACTIVE
+  if (showSplash) {
+    return <SplashPage />;
+  }
 
-  return (
-    <motion.div
-      className="flex min-h-screen bg-gradient-to-b from-[#1c1c3a] to-[#121c3a] text-white relative"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <BubblesBackground />
-      <main className="flex-1 p-6 md:p-10 relative z-10 w-full">
-        <HeaderNav
-          isAuthenticated={isAuthenticated}
-          onLogout={onLogout}
-          setPage={setPage}
-          page={page}
-          profileImage={profileImage}
-        />
-
-        <div className="mt-10 md:mt-20">
-          <AnimatePresence mode="wait">
-            {isAuthenticated && page === 'profile' ? (
-              <ProfileView
-                key="profile"
-                setPage={setPage}
-                username={username}
-                setUsername={setUsername}
-                profileImage={profileImage}
-                setProfileImage={setProfileImage}
-              />
-            ) : page === 'about' ? (
-              <AboutUsView key="about" setPage={setPage} />
-            ) : page === 'dobby-intro' ? (
-              <DobbyIntro key="dobby-intro" setPage={setPage} />
-            ) : page === 'dobby-chat' ? (
-              <DobbyChat key="dobby-chat" setPage={setPage} />
-            ) : isAuthenticated && page === 'account' ? (
-              <AccountPage // ⬅️ Correct component name used
-                key="account" 
+  return (
+    <motion.div
+      className="flex min-h-screen bg-gradient-to-b from-[#1c1c3a] to-[#121c3a] text-white relative"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <BubblesBackground />
+      {/* ⬇️ NAYA NAVBAR YAHAN HAI ⬇️ */}
+      <HeaderNav
+        isAuthenticated={isAuthenticated}
+        onLogout={onLogout}
+        setPage={setPage}
+        page={page}
+        profileImage={profileImage}
+      />
+      
+      <main className="flex-1 p-6 md:p-10 relative z-10 w-full overflow-y-auto pt-24"> 
+      {/* ⬆️ pt-24 add kiya taaki content navbar ke niche se start ho */}
+        
+        <div className="mt-10 md:mt-20"> 
+          <AnimatePresence mode="wait">
+            
+            {page === 'login' ? (
+              <LoginView 
+                key="login" 
+                setPage={setPage} 
+                onLogin={onLogin} 
+              />
+            ) : isAuthenticated && page === 'profile' ? (
+              <ProfileView
+                key="profile"
+                setPage={setPage}
+                username={username}
+                setUsername={setUsername}
+                profileImage={profileImage}
+                setProfileImage={setProfileImage}
+              />
+            ) : page === 'about' ? (
+              <AboutUsView key="about" setPage={setPage} />
+            ) : page === 'dobby-intro' ? (
+              <DobbyIntro key="dobby-intro" setPage={setPage} />
+            ) : page === 'dobby-chat' ? (
+              <DobbyChat key="dobby-chat" setPage={setPage} />
+              
+            // --- Protected Routes ---
+            ) : isAuthenticated && page === 'account' ? (
+              <AccountPage 
+                key="account" 
                 onLogout={onLogout} 
                 setPage={setPage}
-                // ⬇️ PASSING DYNAMIC PROPS HERE ⬇️
                 username={username} 
                 userEmail={userEmail} 
-              />
-            ) : page === 'downloads' ? (
-              <DownloadsView key="downloads" setPage={setPage} />
-            ) : page === 'search' ? (
-              <SearchView key="search" setPage={setPage} />
-            ) : page === 'tools' ? (
-              <ToolsView key="tools" setPage={setPage} />
-            ) : page === 'crop' ? (
-              <CropWorkspace key="crop" setPage={setPage} />
-            ) : page === 'text-extractor' ? (
-              <TextExtractorWorkspace key="text-extractor" setPage={setPage} />
-            ) : page === 'find-object' ? (
-              <FindObjectWorkspace key="find-object" setPage={setPage} />
-            ) : page === 'magic-brush' ? (
-              <MagicBrushWorkspace key="magic-brush" setPage={setPage} />
-            ) : page === 'format-converter' ? (
-              <FormatConverterWorkspace key="format-converter" setPage={setPage} />
-            ) : page === 'adjustments' ? (
-              <AdjustmentsWorkspace key="adjustments" setPage={setPage} />
-            ) : page === 'angle-slider' ? (
-              <AngleSliderWorkspace key="angle-slider" setPage={setPage} />
-            ) : showHelp ? (
-              <HelpView key="help" setShowHelp={setShowHelp} />
+              />
+            ) : isAuthenticated && page === 'downloads' ? ( 
+              <DownloadsView 
+                key="downloads" 
+                setPage={setPage} 
+                images={downloadedImages}
+                onDeleteImage={handleDeleteImage}     
+                onDeleteAll={handleDeleteAllImages} 
+              />
+            ) : page === 'search' ? (
+              <SearchView key="search" setPage={setPage} />
+              
+            ) : isAuthenticated && page === 'tools' ? ( 
+              <ToolsView key="tools" setPage={setPage} />
+              
+            ) : isAuthenticated && page === 'crop' ? ( 
+              <CropWorkspace 
+                key="crop" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'text-extractor' ? ( 
+              <TextExtractorWorkspace 
+                key="text-extractor" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'find-object' ? ( 
+              <FindObjectWorkspace 
+                key="find-object" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'magic-brush' ? ( 
+              <MagicBrushWorkspace 
+                key="magic-brush" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'format-converter' ? ( 
+              <FormatConverterWorkspace 
+                key="format-converter" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'adjustments' ? ( 
+              <AdjustmentsWorkspace 
+                key="adjustments" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+            ) : isAuthenticated && page === 'angle-slider' ? ( 
+              <AngleSliderWorkspace 
+                key="angle-slider" 
+                setPage={setPage} 
+                onImageDownloaded={handleImageDownload}
+              />
+              
+            ) : showHelp ? (
+              <HelpView key="help" setShowHelp={setShowHelp} />
 
-            ) : (
-              <MainView key="main" setShowHelp={setShowHelp} setPage={setPage} />
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-    </motion.div>
-  );
+            ) : (
+              <MainView 
+                key="main" 
+                setShowHelp={setShowHelp} 
+                setPage={setPage} 
+                isAuthenticated={isAuthenticated} 
+              />
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+    </motion.div>
+  );
 }
 
 
 // =======================================================================
-//  Header Navigation Sub-Component
+//  Header Navigation (Naya Interactive Design V2)
 // =======================================================================
 function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
+  // Navigation logic (Protected routes ke saath)
   const handleNavClick = (pageNameOrPath) => {
-    if (typeof setPage === 'function') {
-      setPage(pageNameOrPath);
+    if (!isAuthenticated && ['downloads', 'account', 'profile'].includes(pageNameOrPath)) {
+      setPage('login'); // Agar logged-in nahi hain toh login par bhejein
     } else {
-      console.error("setPage prop is not a function inside handleNavClick!");
+      setPage(pageNameOrPath);
     }
     setIsOpen(false);
   }
 
-  const commonNavLinks = (
-    <>
-      <NavItem icon={<Home />} text="Home" active={page === null} onClick={() => handleNavClick(null)} />
-      <NavItem icon={<Download />} text="Downloads" active={page === 'downloads'} onClick={() => handleNavClick('downloads')} />
-      <NavItem icon={<UserCircle />} text="Account" active={page === 'account'} onClick={() => handleNavClick('account')} />
-      <NavItem icon={<Search />} text="Search" active={page === 'search'} onClick={() => handleNavClick('search')} />
-    </>
-  );
+  // Links ki list
+  const navLinks = [
+    { name: "Home", page: null, icon: <Home size={18} /> },
+    { name: "Downloads", page: "downloads", icon: <Download size={18} /> },
+    { name: "Account", page: "account", icon: <UserCircle size={18} /> },
+    { name: "Search", page: "search", icon: <Search size={18} /> }
+  ];
 
   return (
-    <nav className="w-full flex justify-between items-center relative z-20">
-      <div className="flex items-center gap-2 md:gap-4">
-        <img src="logo.svg" alt="FotoFix Logo" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
-        <span onClick={() => handleNavClick(null)} className="translate-y-1 text-2xl font-bold text-white cursor-pointer">FotoFix</span>
-        <div className="hidden md:flex items-center gap-6 ml-4">
-          {commonNavLinks}
+    <nav 
+      className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-[#1c1c3a] via-[#1c1c3a]/90 to-transparent"
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <div className="flex justify-between items-center py-4">
+          
+          {/* 1. Left Side: Logo */}
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2 md:gap-4 cursor-pointer" 
+            onClick={() => handleNavClick(null)}
+          >
+            <img src="logo.svg" alt="FotoFix Logo" className="h-9 w-auto" onError={(e) => e.target.style.display = 'none'} />
+            <span className="text-2xl font-bold text-white tracking-wide">FotoFix</span>
+          </motion.div>
+
+          {/* 2. Center: Desktop Navigation (Naya "Pill" Design) */}
+          <ul className="hidden md:flex items-center gap-2 bg-black/20 p-2 rounded-full border border-white/10">
+            {navLinks.map((link) => (
+              <NavItem
+                key={link.name}
+                text={link.name}
+                icon={link.icon}
+                isActive={page === link.page}
+                onClick={() => handleNavClick(link.page)}
+              />
+            ))}
+          </ul>
+
+          {/* 3. Right Side: Auth & Mobile Menu */}
+          <div className="flex items-center gap-3">
+            {isAuthenticated ? (
+              // --- Logged-In View ---
+              <>
+                <motion.button 
+                  whileHover={{ scale: 1.1, backgroundColor: "rgba(239, 68, 68, 0.3)" }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={onLogout} 
+                  className="p-2.5 rounded-full text-gray-300 hover:text-white transition-colors hidden md:block" 
+                  aria-label="Logout"
+                >
+                  <LogOut size={20} />
+                </motion.button>
+                
+                <motion.img
+                  whileHover={{ 
+                    scale: 1.05, 
+                    boxShadow: "0 0 15px rgba(168, 85, 247, 0.8), 0 0 5px rgba(59, 130, 246, 0.6)" // ⬅️ Naya Glow
+                  }} 
+                  transition={{ type: "spring", stiffness: 300 }}
+                  src={profileImage}
+                  alt="User Avatar"
+                  className="w-10 h-10 rounded-full border-2 border-purple-500 cursor-pointer object-cover"
+                  onClick={() => handleNavClick('profile')}
+                  onError={(e) => e.target.src = 'https://placehold.co/40x40/7c3aed/ffffff?text=U'}
+                />
+              </>
+            ) : (
+              // --- Logged-Out View ---
+              <div className="hidden md:block">
+                <GradientButton 
+                  text="Login / Signup" 
+                  onClick={() => handleNavClick('login')}
+                  className="px-6 py-2.5 text-sm" // Chhota button
+                />
+              </div>
+            )}
+            
+            {/* Mobile Menu Button */}
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+              onClick={toggleMenu} 
+              className="p-2 md:hidden focus:outline-none" 
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </motion.button>
+          </div>
         </div>
       </div>
 
-      {/* Right Side - Logged In View */}
-      <div className="flex items-center gap-4">
-        {/* Search button for small screens */}
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => handleNavClick('search')}
-          className={`md:hidden p-2 rounded-full transition-colors 
-              ${page === 'search' ? 'bg-purple-600/70' : 'hover:bg-gray-700/50'}
-            `}
-          aria-label="Search"
-        >
-          <Search size={20} className={page === 'search' ? 'text-white' : 'text-gray-400'} />
-        </motion.button>
-
-        {/* Avatar image */}
-        <img
-          src={profileImage}
-          alt="User Avatar"
-          className="w-10 h-10 rounded-full border-2 border-blue-500 cursor-pointer object-cover"
-          onClick={() => handleNavClick('profile')}
-          onError={(e) => e.target.src = '[https://placehold.co/40x40/7c3aed/ffffff?text=U](https://placehold.co/40x40/7c3aed/ffffff?text=U)'} // Fallback
-        />
-        <button onClick={onLogout} className="p-2 hover:bg-red-500/50 rounded-full hidden md:block" aria-label="Logout"> <LogOut size={20} /> </button>
-        <button onClick={toggleMenu} className="p-2 md:hidden focus:outline-none" aria-label="Toggle menu"> {isOpen ? <X size={24} /> : <Menu size={24} />} </button>
-      </div>
-
+      {/* 4. Animated Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }}
-            className="absolute top-full left-0 right-0 mt-2 md:hidden bg-[#1c1c3a]/95 backdrop-blur-md shadow-lg p-4 z-40 overflow-hidden" >
-            <ul className="flex flex-col space-y-3">
-              {commonNavLinks} <hr className="border-gray-700 my-2" />
-              {/* Mobile Logout Button */}
-              <li>
-                <button onClick={() => { onLogout(); setIsOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300">
-                  <LogOut size={20} /> <span className="font-medium">Logout</span>
-                </button>
-              </li>
-            </ul>
-          </motion.div>
+          <AnimatedMobileMenu 
+            page={page}
+            isAuthenticated={isAuthenticated}
+            onLogout={() => { onLogout(); setIsOpen(false); }}
+            handleNavClick={handleNavClick}
+            navLinks={navLinks}
+          />
         )}
       </AnimatePresence>
     </nav>
@@ -218,11 +375,140 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
 }
 
 // -----------------------------------------------------------------------
+// Helper Component: NavItem (Desktop links ke liye "Pill" style)
+// -----------------------------------------------------------------------
+function NavItem({ text, icon, isActive, onClick }) {
+  return (
+    <li
+      onClick={onClick}
+      className="relative px-4 py-2 rounded-full cursor-pointer transition-colors"
+      style={{
+        WebkitTapHighlightColor: "transparent", // Mobile par tap highlight hatayein
+      }}
+    >
+      {/* 2. Yeh hai Naya Sliding Gradient Pill */}
+      {isActive && (
+        <motion.div
+          layoutId="active-pill" // Yeh animation ko possible banata hai
+          className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg"
+          style={{ borderRadius: 9999 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        />
+      )}
+      
+      {/* Text aur Icon */}
+      <span className="relative z-10 flex items-center gap-2 text-sm font-medium">
+        {icon}
+        {text}
+      </span>
+    </li>
+  );
+}
+
+// -----------------------------------------------------------------------
+// Helper Component: AnimatedMobileMenu
+// -----------------------------------------------------------------------
+const menuVariants = {
+  closed: { opacity: 0, height: 0 },
+  open: { 
+    opacity: 1, 
+    height: 'auto',
+    transition: { 
+      when: "beforeChildren", 
+      staggerChildren: 0.05 
+    } 
+  }
+};
+
+const itemVariants = {
+  closed: { opacity: 0, y: -10 },
+  open: { opacity: 1, y: 0 }
+};
+
+function AnimatedMobileMenu({ page, isAuthenticated, onLogout, handleNavClick, navLinks }) {
+  return (
+    <motion.div 
+      variants={menuVariants}
+      initial="closed"
+      animate="open"
+      exit="closed"
+      // Naya glassmorphism background
+      className="absolute top-full left-0 right-0 md:hidden bg-[#1c1c3a]/90 backdrop-blur-lg shadow-lg overflow-hidden border-t border-white/10"
+    >
+      <ul className="flex flex-col p-4 space-y-2">
+        {navLinks.map(link => (
+          <motion.li variants={itemVariants} key={link.name}>
+            <MobileNavItem 
+              text={link.name} 
+              icon={link.icon} 
+              isActive={page === link.page} 
+              onClick={() => handleNavClick(link.page)} 
+            />
+          </motion.li>
+        ))}
+        
+        <hr className="border-gray-700 my-2" />
+        
+        {isAuthenticated ? (
+          <motion.li variants={itemVariants}>
+            <button onClick={onLogout} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300">
+              <LogOut size={20} /> <span className="font-medium">Logout</span>
+            </button>
+          </motion.li>
+        ) : (
+          <motion.li variants={itemVariants}>
+            <button onClick={() => handleNavClick('login')} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-blue-300 hover:bg-blue-500/20 hover:text-blue-200">
+              <LogIn size={20} /> <span className="font-medium">Login / Signup</span>
+            </button>
+          </motion.li>
+        )}
+      </ul>
+    </motion.div>
+  );
+}
+
+// -----------------------------------------------------------------------
+// Helper Component: MobileNavItem
+// -----------------------------------------------------------------------
+function MobileNavItem({ icon, text, isActive, onClick }) {
+  return (
+    <div 
+      onClick={onClick} 
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer 
+                  ${isActive ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' : 'text-white/70 hover:bg-gray-700/50 hover:text-white'}`}
+    > 
+      {icon} <span className="font-medium">{text}</span> 
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------
+// ⬇️ GradientButton ki definition yahan *NAHI* thi, isliye error aa raha tha
+// Maine ise neeche AUXILIARY COMPONENTS section mein rakha hai.
+// -----------------------------------------------------------------------
+
 
 // =======================================================================
-//  Main View (Handles links to About and Dobby)
+//  Main View
 // =======================================================================
-function MainView({ setShowHelp, setPage }) {
+function MainView({ setShowHelp, setPage, isAuthenticated }) {
+  
+  const handleCreateClick = () => {
+    if (isAuthenticated) {
+      setPage('tools');
+    } else {
+      setPage('login'); 
+    }
+  };
+  
+  const handleGenerateClick = () => {
+    if (isAuthenticated) {
+      alert("Generate feature coming soon!"); 
+    } else {
+      setPage('login');
+    }
+  };
+  
   return (
     <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="flex flex-col lg:flex-row items-center gap-10 md:gap-20" >
@@ -232,9 +518,13 @@ function MainView({ setShowHelp, setPage }) {
         <div className="flex flex-col items-center lg:items-center gap-4">
           <div className="flex items-center gap-4">
             <GradientButton className='lg:px-20' text="Discover" isBlue />
-            <GradientButton className='lg:px-20' text="Create" isOutline onClick={() => setPage('tools')} />
+            <GradientButton className='lg:px-20' text="Create" isOutline onClick={handleCreateClick} />
           </div>
-          <GradientButton text="GenerateImage" className="lg:px-57 px-33 max-w-40 lg:min-w-60 justfy-center items-center text-center flex flex-col" />
+          <GradientButton 
+            text="GenerateImage" 
+            className="lg:px-57 px-33 max-w-40 lg:min-w-60 justfy-center items-center text-center flex flex-col"
+            onClick={handleGenerateClick} 
+          />
         </div>
         <div className="mt-12 flex justify-center iten lg:justify-center gap-4 items-center">
           <SmallButton className="h-16" onClick={() => setPage('about')}>
@@ -251,7 +541,7 @@ function MainView({ setShowHelp, setPage }) {
       </div>
       <div className="flex-1 w-full max-w-lg lg:max-w-none">
         <motion.div whileHover={{ scale: 1.03 }} className="w-full h-[450px] bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border-2 border-indigo-400/30">
-          <img src="/home.svg" alt="Forest and clouds" className="w-full h-full object-cover object-" onError={(e) => e.target.src = '[https://placehold.co/600x400/1f2937/9ca3af?text=Image+Not+Found](https://placehold.co/600x400/1f2937/9ca3af?text=Image+Not+Found)'} />
+          <img src="/home.svg" alt="Forest and clouds" className="w-full h-full object-cover object-" onError={(e) => e.target.src = 'https://placehold.co/600x400/1f2937/9ca3af?text=Image+Not+Found'} />
         </motion.div>
       </div>
     </motion.div>
@@ -261,7 +551,7 @@ function MainView({ setShowHelp, setPage }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  Help View
+//  Help View
 // =======================================================================
 function HelpView({ setShowHelp }) {
   return (
@@ -288,50 +578,8 @@ function HelpView({ setShowHelp }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  Account View
+//  InfoField (Used in AccountView/ProfileView)
 // =======================================================================
-function AccountView({ onLogout, setPage }) {
-  const userData = {
-    name: "Keshav Kumar", phone: "9528316559", email: "Keshav18@gmail.com",
-    backupEmail: "krishna18@gmail.com", password: "••••••••", securityKey: "2678 8746 3827",
-  };
-  return (
-    <motion.div key="account-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white" >
-      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
-        <ArrowLeft size={18} /> Back to Home
-      </button>
-      <div className="flex items-center mb-8">
-        <ChevronRight size={28} className="text-gray-400 -ml-2" />
-        <h1 className="text-3xl font-bold ml-2">Setting</h1>
-      </div>
-      <h2 className="text-4xl font-bold text-center mb-10">Account Settings</h2>
-      <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-          <div>
-            <InfoField label="Name" value={userData.name} />
-            <InfoField label="Email" value={userData.email} />
-            <InfoField label="Password" value={userData.password} isPassword />
-          </div>
-          <div>
-            <InfoField label="Phone Number" value={userData.phone} />
-            <InfoField label="Backup Email" value={userData.backupEmail} />
-            <InfoField label="Security Key" value={userData.securityKey} />
-          </div>
-        </div>
-        <div className="mt-10 flex justify-center">
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={onLogout}
-            className="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold shadow-lg" >
-            <LogOut size={20} /> Logout
-          </motion.button>
-        </div>
-
-      </div>
-    </motion.div>
-  );
-}
-
-// InfoField (Used in AccountView)
 function InfoField({ label, value, isPassword = false }) {
   return (
     <div className="mb-4">
@@ -347,7 +595,7 @@ function InfoField({ label, value, isPassword = false }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  Profile View
+//  Profile View
 // =======================================================================
 function ProfileView({ setPage, username, setUsername, profileImage, setProfileImage }) {
   const [nickname, setNickname] = useState(username);
@@ -363,14 +611,12 @@ function ProfileView({ setPage, username, setUsername, profileImage, setProfileI
     if (file) {
       const newImageUrl = URL.createObjectURL(file);
       setLocalProfileImage(newImageUrl);
-      console.log("Selected file:", file.name);
     }
   };
 
   const handleSave = () => {
     setUsername(nickname);
     setProfileImage(localProfileImage);
-    console.log("Saving changes:", { nickname, localProfileImage });
     setPage(null); // Go back to home
   };
 
@@ -393,7 +639,7 @@ function ProfileView({ setPage, username, setUsername, profileImage, setProfileI
             src={localProfileImage}
             alt="Profile"
             className="w-40 h-40 rounded-full object-cover border-4 border-gray-700"
-            onError={(e) => e.target.src = '[https://placehold.co/150x150/222244/ffffff?text=Error](https://placehold.co/150x150/222244/ffffff?text=Error)'}
+            onError={(e) => e.target.src = 'https://placehold.co/150x150/222244/ffffff?text=Error'}
           />
           <motion.button
             whileHover={{ scale: 1.1 }}
@@ -433,10 +679,10 @@ function ProfileView({ setPage, username, setUsername, profileImage, setProfileI
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  SearchView
+//  SearchView
 // =======================================================================
 function SearchView({ setPage }) {
-  return (
+   return (
     <motion.div key="search-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white">
       <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6"> <ArrowLeft size={18} /> Back to Home </button>
@@ -450,15 +696,93 @@ function SearchView({ setPage }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  DownloadsView
+//  DownloadsView (UPDATED with Delete Buttons)
 // =======================================================================
-function DownloadsView({ setPage }) {
+function DownloadsView({ setPage, images, onDeleteImage, onDeleteAll }) {
+
+  const handleRedownload = (url, name) => {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <motion.div key="downloads-view" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white">
-      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6"> <ArrowLeft size={18} /> Back to Home </button>
-      <h2 className="text-4xl font-bold text-center mb-10">Downloads Page</h2>
-      <p className="text-center text-gray-400">This is where the list of downloads will appear.</p>
+    <motion.div 
+      key="downloads-view" 
+      initial={{ opacity: 0, y: 20 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -20 }} 
+      transition={{ duration: 0.3 }}
+      className="p-0 md:p-0 text-white"
+    >
+      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6"> 
+        <ArrowLeft size={18} /> Back to Home 
+      </button>
+      
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
+        <div className="flex items-center gap-3">
+          <span className="w-3 h-3 bg-purple-500 rounded-full animate-pulse"></span>
+          <h1 className="text-3xl font-bold">Downloads</h1>
+        </div>
+        {images && images.length > 0 && (
+          <button
+            onClick={onDeleteAll}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-red-600/50 text-red-300 rounded-lg text-sm font-semibold hover:bg-red-600 hover:text-white transition-colors"
+          >
+            <Trash2 size={16} /> Delete All
+          </button>
+        )}
+      </div>
+      <h2 className="text-4xl font-bold mb-10">Downloaded Images</h2>
+
+      {images && images.length > 0 ? (
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          {images.map((image) => (
+            <motion.div
+              key={image.id}
+              className="relative aspect-video bg-[#2a2a4a]/50 rounded-lg overflow-hidden border-2 border-gray-700/50 group"
+              whileHover={{ scale: 1.05, borderColor: '#a855f7' }}
+              layout
+            >
+              <img 
+                src={image.url} 
+                alt={image.name} 
+                className="w-full h-full object-cover" 
+                onError={(e) => e.target.src = 'https://placehold.co/300x200/222244/ffffff?text=Error'}
+              />
+              
+              <button
+                onClick={() => handleRedownload(image.url, image.name)}
+                className="absolute top-2 right-2 p-2 bg-black/50 backdrop-blur-sm rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label="Download image"
+              >
+                <Download size={18} />
+              </button>
+
+              <button
+                onClick={() => onDeleteImage(image.id)}
+                className="absolute top-2 left-2 p-2 bg-black/50 backdrop-blur-sm rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/50 hover:text-white"
+                aria-label="Delete image"
+              >
+                <X size={18} /> 
+              </button>
+            </motion.div>
+          ))}
+        </motion.div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-60 bg-[#1f1f3d]/50 rounded-lg border-2 border-dashed border-gray-700">
+          <Download size={48} className="text-gray-500 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-400">No downloaded images yet.</h3>
+          <p className="text-gray-500">Start editing to see your creations here!</p>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -466,14 +790,9 @@ function DownloadsView({ setPage }) {
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  Tools View Sub-Component (Navigation Hub)
+//  Tools View Sub-Component
 // =======================================================================
 function ToolsView({ setPage }) {
-
-  const handleToolClick = (toolName) => {
-    // Fallback handler for unlinked tools (not needed since all are linked now)
-  };
-
   return (
     <motion.div
       key="tools-view"
@@ -481,14 +800,12 @@ function ToolsView({ setPage }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white"
+      className="p-0 md:p-0 text-white max-w-5xl mx-auto" 
     >
-      {/* Back button */}
       <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
         <ArrowLeft size={18} /> Back to Home
       </button>
 
-      {/* Header */}
       <div className="flex justify-between items-center mb-10">
         <h2 className="text-4xl font-bold text-center">Tools</h2>
         <span className="bg-purple-600/50 text-purple-300 border border-purple-400 rounded-full px-4 py-1 text-sm font-semibold">
@@ -496,83 +813,150 @@ function ToolsView({ setPage }) {
         </span>
       </div>
 
-      {/* Tools Grid (3x3 layout) */}
+      <h3 className="text-2xl font-semibold text-purple-300 mb-4">Featured Tool</h3>
+      <FeaturedToolCard
+        icon={<Sun size={40} />}
+        title="Image Adjustments"
+        description="Fine-tune brightness, contrast, saturation, and more with our most powerful tool."
+        onClick={() => setPage('adjustments')}
+      />
+
+      <h3 className="text-2xl font-semibold text-purple-300 mt-12 mb-4">All Tools</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 ">
-
-        {/* Row 1 */}
-        <ToolCard
-          icon={<Search size={48} />}
-          title="Find Object"
-          onClick={() => setPage('find-object')}
-        />
-        <ToolCard
-          icon={<FileText size={48} />}
-          title="Text Extractor"
-          onClick={() => setPage('text-extractor')}
-        />
-        {/* <ToolCard
-          icon={<Repeat size={48} />}
-          title="Jpg to png"
-          onClick={() => setPage('jpg-to-png')}
-        />
-
         
-        <ToolCard
-          icon={<RefreshCw size={48} />}
-          title="Png to jpg"
-          onClick={() => setPage('png-to-jpg')}
-        /> 
-        */}
-
-        <ToolCard
-          icon={<Wand2 size={48} />}
-          title="Magic Brush"
-          onClick={() => setPage('magic-brush')}
-        />
-        <ToolCard
-          icon={<Sun size={48} />}
-          title="Adjustments"
-          onClick={() => setPage('adjustments')} // ⬅️ UPDATED LINK
-        />
-
-        <ToolCard
-          icon={<Repeat size={48} />}
-          title="Converter" // Renamed for clarity
-          onClick={() => setPage('format-converter')} // ⬅️ UPDATED LINK
-        />
-        <ToolCard
-          icon={<Crop size={48} />}
+        <StandardToolCard
+          icon={<Crop size={32} />}
           title="Crop"
+          description="Cut and resize your image."
           onClick={() => setPage('crop')}
         />
-        <ToolCard
-          icon={<Repeat size={48} className="rotate-90" />}
+        
+        <StandardToolCard
+          icon={<Repeat size={32} />}
+          title="Converter"
+          description="Convert to JPG, PNG, WEBP."
+          onClick={() => setPage('format-converter')} 
+        />
+        
+        <StandardToolCard
+          icon={<Wand2 size={32} />}
+          title="Magic Brush"
+          description="Coming soon! (AI Editing)"
+          onClick={() => setPage('magic-brush')}
+        />
+        
+        <StandardToolCard
+          icon={<FileText size={32} />}
+          title="Text Extractor"
+          description="Pull text from any image."
+          onClick={() => setPage('text-extractor')}
+        />
+        
+        <StandardToolCard
+          icon={<Search size={32} />}
+          title="Find Object"
+          description="Detect objects in your photo."
+          onClick={() => setPage('find-object')}
+        />
+
+        <StandardToolCard
+          icon={<Repeat size={32} className="rotate-90" />}
           title="Angle Slider"
+          description="Straighten and rotate."
           onClick={() => setPage('angle-slider')}
         />
-        {/* <ToolCard 
-          icon={<Star size={48} />} 
-          title="Sharpness" 
-          onClick={() => setPage('sharpness')} 
-        /> */}
-
       </div>
     </motion.div>
   );
 }
 
+
+// =======================================================================
+//  Naya ToolCard Components
+// =======================================================================
+
+function FeaturedToolCard({ icon, title, description, onClick }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02, y: -5 }}
+      onClick={onClick}
+      className="bg-gradient-to-r from-purple-600/30 to-blue-600/30
+                 backdrop-blur-sm rounded-2xl p-6 flex flex-col md:flex-row 
+                 items-center gap-6 cursor-pointer transition-all 
+                 border-2 border-purple-400/50 hover:border-purple-300 shadow-xl"
+    >
+      <div className="flex-shrink-0 bg-purple-900/50 p-4 rounded-xl text-purple-200">
+        {icon}
+      </div>
+      <div className="flex-1 text-center md:text-left">
+        <h3 className="text-2xl font-bold text-white mb-1">{title}</h3>
+        <p className="text-gray-300">{description}</p>
+      </div>
+      <div className="text-purple-300">
+        <ChevronRight size={32} />
+      </div>
+    </motion.div>
+  );
+}
+
+function StandardToolCard({ icon, title, description, onClick }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05, y: -5 }}
+      onClick={onClick}
+      className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-6 
+                 flex flex-col items-center justify-center gap-4 aspect-square 
+                 cursor-pointer transition-all 
+                 border-2 border-transparent hover:border-purple-500"
+    >
+      <div className="text-purple-400">
+        {icon}
+      </div>
+      <div className="text-center">
+        <h3 className="text-xl font-semibold text-white">{title}</h3>
+        <p className="text-gray-400 text-sm mt-1">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+// -----------------------------------------------------------------------
+// =======================================================================
+//  LoginView Component (Placeholder)
+// =======================================================================
+function LoginView({ setPage, onLogin }) {
+  
+  const handleLoginClick = () => {
+    if (onLogin) {
+      alert("Please use the main login form. This is a fallback.");
+    }
+  };
+  
+  return (
+    <motion.div
+      key="login-view-fallback"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="max-w-md mx-auto p-8 bg-[#1f1f3d]/50 rounded-2xl"
+    >
+      <h2 className="text-4xl font-bold text-center mb-6 text-white">Login Required</h2>
+      <p className="text-center text-gray-400 mb-8">
+        Please login to continue. (Fallback View)
+      </p>
+      <GradientButton 
+          text="Go to Login"
+          isBlue
+          className="w-full justify-center"
+          onClick={() => setPage('login')} 
+      />
+    </motion.div>
+  );
+}
 // -----------------------------------------------------------------------
 
 // =======================================================================
-//  AUXILIARY COMPONENTS (Used across the file)
+//  AUXILIARY COMPONENTS (Used across the file)
 // =======================================================================
-
-// NavItem
-function NavItem({ icon, text, active = false, onClick }) {
-  const content = (<> {icon} <span className="font-medium">{text}</span> </>);
-  const classes = `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${active ? 'bg-blue-600 text-white shadow-lg' : 'text-white/70 hover:bg-gray-700/50 hover:text-white'}`;
-  return (<div onClick={onClick} className={classes}> {content} </div>);
-}
 
 // BubblesBackground
 function BubblesBackground() {
@@ -596,7 +980,8 @@ function BubblesBackground() {
   );
 }
 
-// GradientButton
+// ⬇️ YAHAN HAI WAHID (SINGLE) 'GradientButton' DEFINITION ⬇️
+// GradientButton (Navbar aur MainView dono use karte hain)
 function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled }) {
   const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
   const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
@@ -634,22 +1019,6 @@ function HelpCard({ icon, title, text }) {
       <div className="mb-4"> {icon} </div>
       <h4 className="text-xl font-bold mb-2">{title}</h4>
       <p className="text-gray-400">{text}</p>
-    </motion.div>
-  );
-}
-
-// ToolCard (Used in ToolsView)
-function ToolCard({ icon, title, onClick }) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -5 }}
-      onClick={onClick}
-      className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center justify-center gap-4 aspect-square cursor-pointer transition-all border-2 border-transparent hover:border-purple-500"
-    >
-      <div className="text-purple-400 flex flex-col items-center justify-center">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold text-white text-center">{title}</h3>
     </motion.div>
   );
 }
