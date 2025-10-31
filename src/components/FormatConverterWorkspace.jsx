@@ -38,27 +38,30 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
 // =======================================================================
 //  Unified Format Converter Workspace
 // =======================================================================
-// ⬇️ 'onImageDownloaded' prop ko yahan accept karein
 export default function FormatConverterWorkspace({ setPage, onImageDownloaded }) {
-    const [imageSrc, setImageSrc] = useState(null);
+    const [imageSrc, setImageSrc] = useState(null); 
+    const [originalImage, setOriginalImage] = useState(null); 
     const [originalFileName, setOriginalFileName] = useState("");
     const [outputFormat, setOutputFormat] = useState('png');
     const [isConverting, setIsConverting] = useState(false);
     
-    const imgUrlRef = useRef(null); // Yeh 'blob:' URL rakhega
+    const imgUrlRef = useRef(null); 
 
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
-            // Purana blob URL (agar hai) memory se clean karein
             if (imgUrlRef.current) {
                 URL.revokeObjectURL(imgUrlRef.current);
             }
 
-            const url = URL.createObjectURL(file);
-            imgUrlRef.current = url; // Naya blob URL save karein
-            setImageSrc(url);
+            const previewUrl = URL.createObjectURL(file);
+            imgUrlRef.current = previewUrl; 
+            setImageSrc(previewUrl); 
             setOriginalFileName(file.name);
+            
+            const reader = new FileReader();
+            reader.onload = (e) => setOriginalImage(e.target.result); 
+            reader.readAsDataURL(file);
             
             if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
                 setOutputFormat('png');
@@ -68,10 +71,8 @@ export default function FormatConverterWorkspace({ setPage, onImageDownloaded })
         }
     };
 
-    // ⬇️ --- (FIXED) 'handleConversion' FUNCTION --- ⬇️
     const handleConversion = () => {
-        const currentUrl = imgUrlRef.current; // Yeh 'blob:http://...' URL hai
-        if (!currentUrl || !outputFormat) return;
+        if (!originalImage || !outputFormat) return;
 
         setIsConverting(true);
         
@@ -79,68 +80,49 @@ export default function FormatConverterWorkspace({ setPage, onImageDownloaded })
         img.crossOrigin = "anonymous"; 
         
         img.onload = () => {
-            // 1. Canvas setup
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
             const ctx = canvas.getContext('2d');
             
-            if (!ctx) {
-                alert("Conversion failed: Canvas context error.");
-                setIsConverting(false);
-                return;
-            }
-
+            if (!ctx) { alert("Conversion failed: Canvas context error."); setIsConverting(false); return; }
             try {
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            } catch (error) {
-                console.error("Error drawing image to canvas:", error);
-                alert("Could not draw image to canvas. Check browser console.");
-                setIsConverting(false);
-                return;
-            }
+            } catch (error) { alert("Could not draw image to canvas."); setIsConverting(false); return; }
 
-            // 2. Format info
             const formatInfo = FORMATS[outputFormat];
             const mimeType = formatInfo.mime;
             const quality = (outputFormat === 'jpg' || outputFormat === 'webp') ? 0.9 : undefined; 
 
-            // 3. ⬇️ Data URL banayein (toBlob ki jagah) ⬇️
-            const dataUrl = canvas.toDataURL(mimeType, quality); // ⬅️ YEH HAI BADLAV
+            const dataUrl = canvas.toDataURL(mimeType, quality);
             const baseName = originalFileName.replace(/\.[^/.]+$/, "");
             const newFileName = `${baseName}.${outputFormat}`;
 
-            // 4. ⭐️ HomePage ko 'dataUrl' bhej dein ⭐️
             if (onImageDownloaded) {
-                onImageDownloaded(dataUrl, newFileName); // ⬅️ YAHAN 'dataUrl' PASS KAREIN
+                onImageDownloaded(dataUrl, newFileName); 
             }
 
-            // 5. Download trigger karein (ab 'dataUrl' se)
             const link = document.createElement('a');
             link.download = newFileName;
-            link.href = dataUrl; // ⬅️ YAHAN BHI 'dataUrl' USE KAREIN
+            link.href = dataUrl;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            // 6. Cleanup (Sirf original blob URL ko revoke karein)
             setTimeout(() => {
-                URL.revokeObjectURL(currentUrl);
+                if (imgUrlRef.current) {
+                    URL.revokeObjectURL(imgUrlRef.current);
+                }
                 setImageSrc(null);
+                setOriginalImage(null); 
                 imgUrlRef.current = null;
                 setIsConverting(false);
             }, 50); 
         };
 
-        img.onerror = () => {
-             alert("Failed to load the image for conversion. It might be a network issue.");
-             setIsConverting(false);
-        };
+        img.onerror = () => { alert("Failed to load the image for conversion."); setIsConverting(false); };
         
-        // Timeout ke saath img.src set karein
-        setTimeout(() => {
-            img.src = currentUrl; 
-        }, 0); 
+        img.src = originalImage; 
     };
 
     return (
@@ -150,7 +132,7 @@ export default function FormatConverterWorkspace({ setPage, onImageDownloaded })
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="p-0 md:p-0 text-white max-w-2xl mx-auto"
+            className="p-0 md:p-0 text-white max-w-4xl mx-auto" 
         >
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
@@ -167,31 +149,34 @@ export default function FormatConverterWorkspace({ setPage, onImageDownloaded })
 
             <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
                 
-                <div className="w-full h-64 flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
+                <div className="w-full h-full min-h-[300px] md:min-h-[400px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
                     {imageSrc ? (
                         <img src={imageSrc} alt="Input Image" className="max-w-full max-h-full object-contain" />
                     ) : (
-                        <p className="text-gray-400">Upload any image to convert</p>
+                        <div className="text-center p-10">
+                            <UploadCloud size={64} className="text-gray-500 mx-auto" />
+                            <p className="text-gray-400 mt-4">Upload any image to convert</p>
+                        </div>
                     )}
                 </div>
 
-                <div className='w-full space-y-4'>
+                <div className='w-full max-w-md mx-auto space-y-4'>
                     <input type="file" id="converter-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
                     
                     <label 
                         htmlFor="converter-upload" 
-                        className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2"
+                        className="w-full px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2"
                     >
-                        <UploadCloud size={20} /> Select File (Any Format)
+                        <UploadCloud size={20} /> {imageSrc ? "Change Image" : "Upload Image"}
                     </label>
 
-                    {/* Output Format Dropdown */}
-                    <div className='flex items-center gap-4'>
-                        <span className='text-gray-400 font-medium'>Convert To:</span>
+                    {/* ⬇️ --- YAHAN FIX KIYA GAYA HAI --- ⬇️ */}
+                    <div className='flex flex-col md:flex-row md:items-center justify-center gap-2 md:gap-4'>
+                        <span className='text-gray-400 font-medium w-full md:w-auto'>Convert To:</span>
                         <select
                             value={outputFormat}
                             onChange={(e) => setOutputFormat(e.target.value)}
-                            className='flex-1 p-3 rounded-lg bg-[#2a2a4a] border border-purple-600 text-white'
+                            className='w-full p-3 rounded-lg bg-[#2a2a4a] border border-purple-600 text-white' // ⬅️ 'flex-1' ko 'w-full' se badla
                             disabled={isConverting || !imageSrc}
                         >
                             {Object.entries(FORMATS).map(([key, value]) => (
@@ -201,6 +186,7 @@ export default function FormatConverterWorkspace({ setPage, onImageDownloaded })
                             ))}
                         </select>
                     </div>
+                    {/* ⬆️ --- FIX ENDS HERE --- ⬆️ */}
                     
                     <GradientButton 
                         text={isConverting ? "Converting..." : "Convert & Download"}

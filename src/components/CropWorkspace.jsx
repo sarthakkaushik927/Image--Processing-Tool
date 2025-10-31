@@ -285,7 +285,7 @@ export default function CropWorkspace({ setPage, onImageDownloaded }) {
         </div>
 
           {/* Bottom Controls */}
-          <div className="mt-8 flex gap-4 w-full justify-center">
+          <div className="mt-8 flex flex-col md:flex-row gap-4 w-full justify-center">
             <GradientButton 
                 text="Apply Crop" 
                 className="px-10" 

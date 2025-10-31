@@ -70,7 +70,9 @@ export default function FindObjectWorkspace({ setPage, onImageDownloaded }) {
         const link = document.createElement('a');
         link.href = processedImageURL;
         link.download = downloadName; 
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -80,7 +82,7 @@ export default function FindObjectWorkspace({ setPage, onImageDownloaded }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="p-0 md:p-0 text-white max-w-2xl mx-auto"
+            className="p-0 md:p-0 text-white max-w-4xl mx-auto" // ⬅️ Max width
         >
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
@@ -95,21 +97,32 @@ export default function FindObjectWorkspace({ setPage, onImageDownloaded }) {
             </div>
 
             <div className="bg-[#1f1f3d]/50 p-6 flex flex-col items-center border-2 border-indigo-400/30 rounded-2xl">
-                <div className="w-full h-72 flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
+                {/* ⬇️ BADLAV: 'h-72' ko 'min-h-[300px] md:min-h-[500px]' se badla ⬇️ */}
+                <div className="w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
                     {originalImage ? (
                         <img src={processedImageURL || originalImage} alt="Input" className="max-w-full max-h-full object-contain" />
                     ) : (
-                        <p className="text-gray-400">Upload an image to detect objects</p>
+                        <div className="text-center p-10">
+                            <UploadCloud size={64} className="text-gray-500 mx-auto" />
+                            <p className="text-gray-400 mt-4">Upload an image to detect objects</p>
+                        </div>
+                    )}
+                    {isLoading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-10 rounded-md">
+                            <Loader2 size={48} className="text-purple-400 animate-spin" />
+                            <p className="ml-4 text-xl font-medium mt-4">Finding objects...</p>
+                        </div>
                     )}
                 </div>
+                
                 <input type="file" id="find-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
                 
                 {/* ⬇️ STEP 4: Naya Download button add karein ⬇️ */}
                 <div className="flex flex-wrap justify-center gap-4 w-full">
                     <label htmlFor="find-upload" className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
-                        <UploadCloud size={20} /> Upload Image
+                        <UploadCloud size={20} /> {originalImage ? "Change Image" : "Upload Image"}
                     </label>
-                    <GradientButton text={isLoading ? "Finding..." : "Find"} onClick={handleFind} isBlue disabled={!originalImage || isLoading} icon={isLoading ? Loader2 : Search} />
+                    <GradientButton text={isLoading ? "Finding..." : "Find Objects"} onClick={handleFind} isBlue disabled={!originalImage || isLoading} icon={isLoading ? Loader2 : Search} />
                     <GradientButton 
                         text="Download Result" 
                         onClick={handleDownload} 

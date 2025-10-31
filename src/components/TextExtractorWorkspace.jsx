@@ -23,7 +23,7 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
             disabled={disabled}
             className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
         > 
-            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />}
+            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />} 
             {text} 
         </motion.button>
     );
@@ -41,14 +41,14 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
 
     // --- Handlers ---
 
-    // 1. Handles image file selection
+    // 1. Handles image file selection (Yeh pehle se dataUrl use kar raha hai, perfect)
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
             setFileName(file.name);
-            setProcessedImageURL(null); 
+            setProcessedImageURL(null); // Reset processed image on new upload
             const reader = new FileReader();
-            reader.onload = (e) => setOriginalImage(e.target.result); // ⬅️ dataUrl
+            reader.onload = (e) => setOriginalImage(e.target.result);
             reader.readAsDataURL(file);
         }
     };
@@ -63,11 +63,11 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         setIsLoading(true);
         setProcessedImageURL(null); 
         console.log(`Sending image for ML processing: ${fileName}`);
-        
+
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // Simulating the ML model returning a processed image
-        const mockProcessedURL = originalImage; // ⬅️ Yeh pehle se hi dataUrl hai
+        // Simulation: Processed image is same as original (dataUrl)
+        const mockProcessedURL = originalImage; 
         
         setProcessedImageURL(mockProcessedURL);
         setIsLoading(false);
@@ -103,16 +103,16 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="p-0 md:p-0 text-white"
+            className="p-0 md:p-0 text-white max-w-4xl mx-auto" // ⬅️ Max width set karein
         >
-            {/* Top Bar */}
+            {/* Top Bar (Matching Screenshot) */}
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
                     <ArrowLeft size={24} /> <span className="text-xl font-medium">Tools</span>
                 </button>
             </div>
 
-            {/* Tool Title */}
+            {/* Tool Title (Matching Screenshot) */}
             <div className="flex flex-col items-center justify-center mb-10">
                 <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
                     <FileText size={48} className="text-purple-400" />
@@ -120,11 +120,12 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                 <h2 className="text-4xl font-bold mt-4">Text Extractor</h2>
             </div>
 
-            {/* Main Workspace Area */}
-            <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center max-w-4xl mx-auto border-2 border-indigo-400/30">
+            {/* Main Workspace Area (Single Column Design) */}
+            <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
                 
                 {/* Image Display Area */}
-                <div className="w-full h-96 flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
+                {/* ⬇️ BADLAV: 'h-96' ko 'min-h-[300px] md:min-h-[500px]' se badla ⬇️ */}
+                <div className="w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
                     {originalImage ? (
                         <img
                             src={processedImageURL || originalImage}
@@ -165,7 +166,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                         htmlFor="extractor-upload" 
                         className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2"
                     >
-                        <UploadCloud size={20} /> Upload Image
+                        <UploadCloud size={20} /> {originalImage ? "Change Image" : "Upload Image"}
                     </label>
 
                     {/* Process Button */}
