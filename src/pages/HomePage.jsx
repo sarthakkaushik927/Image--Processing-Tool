@@ -21,8 +21,9 @@ import {
   Search, LogOut, ArrowLeft, Rocket, Wrench, FileText, Settings,
   LifeBuoy, Star, Home, Download, UserCircle, UploadCloud, Edit,
   PlusCircle, BookOpen, Menu, X, // 'X' icon delete ke liye
-  ChevronRight, Edit2, LogIn, Trash2, // ⬅️ 'Trash2' icon add kiya hai
-  Crop, Repeat, RefreshCw, Wand2, Sun // Lucide icons
+  ChevronRight, Edit2, LogIn, Trash2, 
+  Crop, Repeat, RefreshCw, Wand2, Sun,
+  LayoutGrid, // ⬅️ Naya Icon
 } from 'lucide-react';
 
 // localForage storage ka naam configure karein
@@ -79,11 +80,10 @@ export default function HomePage({
     const newImage = { id: Date.now(), url: imageUrl, name: name };
     setDownloadedImages(prevImages => [newImage, ...prevImages]);
     
-    // Yahan App.jsx se mile onSaveDownload ko call karein
     if (onSaveDownload) {
       onSaveDownload(imageUrl, name);
     } else {
-      console.warn("onSaveDownload prop is missing from HomePage.");
+      localforage.setItem('fotofix-downloads', [newImage, ...downloadedImages]);
     }
   };
 
@@ -128,7 +128,6 @@ export default function HomePage({
       exit={{ opacity: 0 }}
     >
       <BubblesBackground />
-      {/* ⬇️ NAYA NAVBAR YAHAN HAI ⬇️ */}
       <HeaderNav
         isAuthenticated={isAuthenticated}
         onLogout={onLogout}
@@ -138,7 +137,6 @@ export default function HomePage({
       />
       
       <main className="flex-1 p-6 md:p-10 relative z-10 w-full overflow-y-auto pt-24"> 
-      {/* ⬆️ pt-24 add kiya taaki content navbar ke niche se start ho */}
         
         <div className="mt-10 md:mt-20"> 
           <AnimatePresence mode="wait">
@@ -148,6 +146,11 @@ export default function HomePage({
                 key="login" 
                 setPage={setPage} 
                 onLogin={onLogin} 
+              />
+            ) : page === 'discover' ? ( // ⬅️ NAYA DISCOVER PAGE ROUTE
+              <DiscoverView 
+                key="discover"
+                setPage={setPage}
               />
             ) : isAuthenticated && page === 'profile' ? (
               <ProfileView
@@ -251,17 +254,17 @@ export default function HomePage({
 
 
 // =======================================================================
-//  Header Navigation (Naya Interactive Design V2)
+//  Header Navigation (Interactive "Pill" Design)
 // =======================================================================
 function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
   const [isOpen, setIsOpen] = useState(false);
-
   const toggleMenu = () => setIsOpen(!isOpen);
 
-  // Navigation logic (Protected routes ke saath)
+  // Navigation logic
   const handleNavClick = (pageNameOrPath) => {
+    // ❗️ Discover page ab unprotected hai (sab dekh sakte hain)
     if (!isAuthenticated && ['downloads', 'account', 'profile'].includes(pageNameOrPath)) {
-      setPage('login'); // Agar logged-in nahi hain toh login par bhejein
+      setPage('login'); 
     } else {
       setPage(pageNameOrPath);
     }
@@ -271,6 +274,7 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
   // Links ki list
   const navLinks = [
     { name: "Home", page: null, icon: <Home size={18} /> },
+    { name: "Discover", page: "discover", icon: <LayoutGrid size={18} /> }, // ⬅️ NAYA LINK
     { name: "Downloads", page: "downloads", icon: <Download size={18} /> },
     { name: "Account", page: "account", icon: <UserCircle size={18} /> },
     { name: "Search", page: "search", icon: <Search size={18} /> }
@@ -283,7 +287,6 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="flex justify-between items-center py-4">
           
-          {/* 1. Left Side: Logo */}
           <motion.div 
             whileHover={{ scale: 1.05 }}
             className="flex items-center gap-2 md:gap-4 cursor-pointer" 
@@ -293,7 +296,6 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
             <span className="text-2xl font-bold text-white tracking-wide">FotoFix</span>
           </motion.div>
 
-          {/* 2. Center: Desktop Navigation (Naya "Pill" Design) */}
           <ul className="hidden md:flex items-center gap-2 bg-black/20 p-2 rounded-full border border-white/10">
             {navLinks.map((link) => (
               <NavItem
@@ -306,10 +308,8 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
             ))}
           </ul>
 
-          {/* 3. Right Side: Auth & Mobile Menu */}
           <div className="flex items-center gap-3">
             {isAuthenticated ? (
-              // --- Logged-In View ---
               <>
                 <motion.button 
                   whileHover={{ scale: 1.1, backgroundColor: "rgba(239, 68, 68, 0.3)" }}
@@ -324,7 +324,7 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
                 <motion.img
                   whileHover={{ 
                     scale: 1.05, 
-                    boxShadow: "0 0 15px rgba(168, 85, 247, 0.8), 0 0 5px rgba(59, 130, 246, 0.6)" // ⬅️ Naya Glow
+                    boxShadow: "0 0 15px rgba(168, 85, 247, 0.8), 0 0 5px rgba(59, 130, 246, 0.6)"
                   }} 
                   transition={{ type: "spring", stiffness: 300 }}
                   src={profileImage}
@@ -335,17 +335,15 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
                 />
               </>
             ) : (
-              // --- Logged-Out View ---
               <div className="hidden md:block">
                 <GradientButton 
                   text="Login / Signup" 
                   onClick={() => handleNavClick('login')}
-                  className="px-6 py-2.5 text-sm" // Chhota button
+                  className="px-6 py-2.5 text-sm" 
                 />
               </div>
             )}
             
-            {/* Mobile Menu Button */}
             <motion.button 
               whileTap={{ scale: 0.9 }}
               onClick={toggleMenu} 
@@ -358,7 +356,6 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
         </div>
       </div>
 
-      {/* 4. Animated Mobile Menu */}
       <AnimatePresence>
         {isOpen && (
           <AnimatedMobileMenu 
@@ -375,28 +372,23 @@ function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
 }
 
 // -----------------------------------------------------------------------
-// Helper Component: NavItem (Desktop links ke liye "Pill" style)
+// Helper Component: NavItem (Desktop "Pill" style)
 // -----------------------------------------------------------------------
 function NavItem({ text, icon, isActive, onClick }) {
   return (
     <li
       onClick={onClick}
       className="relative px-4 py-2 rounded-full cursor-pointer transition-colors"
-      style={{
-        WebkitTapHighlightColor: "transparent", // Mobile par tap highlight hatayein
-      }}
+      style={{ WebkitTapHighlightColor: "transparent" }}
     >
-      {/* 2. Yeh hai Naya Sliding Gradient Pill */}
       {isActive && (
         <motion.div
-          layoutId="active-pill" // Yeh animation ko possible banata hai
+          layoutId="active-pill" 
           className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full shadow-lg"
           style={{ borderRadius: 9999 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
         />
       )}
-      
-      {/* Text aur Icon */}
       <span className="relative z-10 flex items-center gap-2 text-sm font-medium">
         {icon}
         {text}
@@ -413,13 +405,9 @@ const menuVariants = {
   open: { 
     opacity: 1, 
     height: 'auto',
-    transition: { 
-      when: "beforeChildren", 
-      staggerChildren: 0.05 
-    } 
+    transition: { when: "beforeChildren", staggerChildren: 0.05 } 
   }
 };
-
 const itemVariants = {
   closed: { opacity: 0, y: -10 },
   open: { opacity: 1, y: 0 }
@@ -432,7 +420,6 @@ function AnimatedMobileMenu({ page, isAuthenticated, onLogout, handleNavClick, n
       initial="closed"
       animate="open"
       exit="closed"
-      // Naya glassmorphism background
       className="absolute top-full left-0 right-0 md:hidden bg-[#1c1c3a]/90 backdrop-blur-lg shadow-lg overflow-hidden border-t border-white/10"
     >
       <ul className="flex flex-col p-4 space-y-2">
@@ -446,9 +433,7 @@ function AnimatedMobileMenu({ page, isAuthenticated, onLogout, handleNavClick, n
             />
           </motion.li>
         ))}
-        
         <hr className="border-gray-700 my-2" />
-        
         {isAuthenticated ? (
           <motion.li variants={itemVariants}>
             <button onClick={onLogout} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300">
@@ -482,14 +467,9 @@ function MobileNavItem({ icon, text, isActive, onClick }) {
   );
 }
 
-// -----------------------------------------------------------------------
-// ⬇️ GradientButton ki definition yahan *NAHI* thi, isliye error aa raha tha
-// Maine ise neeche AUXILIARY COMPONENTS section mein rakha hai.
-// -----------------------------------------------------------------------
-
 
 // =======================================================================
-//  Main View
+//  Main View (UPDATED: Discover Button)
 // =======================================================================
 function MainView({ setShowHelp, setPage, isAuthenticated }) {
   
@@ -517,7 +497,8 @@ function MainView({ setShowHelp, setPage, isAuthenticated }) {
         <p className="text-lg text-gray-400 mt-4 mb-8"> Experience seamless image processing </p>
         <div className="flex flex-col items-center lg:items-center gap-4">
           <div className="flex items-center gap-4">
-            <GradientButton className='lg:px-20' text="Discover" isBlue />
+            {/* ⬇️ NAYA 'onClick' HANDLER YAHAN HAI ⬇️ */}
+            <GradientButton className='lg:px-20' text="Discover" isBlue onClick={() => setPage('discover')}/>
             <GradientButton className='lg:px-20' text="Create" isOutline onClick={handleCreateClick} />
           </div>
           <GradientButton 
@@ -841,7 +822,7 @@ function ToolsView({ setPage }) {
         <StandardToolCard
           icon={<Wand2 size={32} />}
           title="Magic Brush"
-          description="Coming soon! (AI Editing)"
+          description="Remove any background."
           onClick={() => setPage('magic-brush')}
         />
         
@@ -870,10 +851,134 @@ function ToolsView({ setPage }) {
   );
 }
 
+// -----------------------------------------------------------------------
+// ⬇️ NAYA DISCOVER PAGE COMPONENT ⬇️
+// =======================================================================
+function DiscoverView({ setPage }) {
 
-// =======================================================================
+  // Mock data for community gallery
+  const communityCreations = [
+    { id: 1, url: 'https://placehold.co/600x800/6366F1/white?text=Art+1', title: 'Cyberpunk City', author: 'User123' },
+    { id: 2, url: 'https://placehold.co/600x600/EC4899/white?text=Art+2', title: 'Forest Dream', author: 'PixelQueen' },
+    { id: 3, url: 'https://placehold.co/600x400/8B5CF6/white?text=Art+3', title: 'Ocean Sunset', author: 'EditMaster' },
+    { id: 4, url: 'https://placehold.co/600x700/F00000/white?text=Art+4', title: 'Red Desert', author: 'FotoFan' },
+  ];
+
+  // Mock data for tutorials
+  const tutorials = [
+    { id: 1, title: 'Master Adjustments', description: 'Learn how to use brightness, contrast, and saturation.', icon: <Sun size={24} />, page: 'adjustments' },
+    { id: 2, title: 'Perfect Cropping', description: 'Get the perfect frame for your photos.', icon: <Crop size={24} />, page: 'crop' },
+    { id: 3, title: 'Remove Backgrounds', description: 'Cut out subjects with one click.', icon: <Wand2 size={24} />, page: 'magic-brush' },
+  ];
+
+  return (
+    <motion.div
+      key="discover-view"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="p-0 md:p-0 text-white max-w-7xl mx-auto" // ⬅️ Extra wide
+    >
+      {/* Page Title */}
+      <div className="mb-10">
+        <h1 className="text-5xl font-bold mb-2">Discover Your Creativity</h1>
+        <p className="text-xl text-gray-400">Get inspired by the community and learn new skills.</p>
+      </div>
+
+      {/* Section 1: Tutorials */}
+      <h2 className="text-3xl font-semibold text-purple-300 mb-4">Learn the Tools</h2>
+      <div className="flex gap-6 overflow-x-auto pb-6 -mx-6 px-6">
+        {tutorials.map(tutorial => (
+          <TutorialCard 
+            key={tutorial.id}
+            icon={tutorial.icon}
+            title={tutorial.title}
+            description={tutorial.description}
+            onClick={() => setPage(tutorial.page)}
+          />
+        ))}
+      </div>
+
+      {/* Section 2: Community Gallery */}
+      <h2 className="text-3xl font-semibold text-purple-300 mt-12 mb-4">Community Gallery</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        {communityCreations.map(item => (
+          <CommunityImageCard 
+            key={item.id}
+            imageUrl={item.url}
+            title={item.title}
+            author={item.author}
+          />
+        ))}
+      </div>
+      
+      {/* Section 3: CTA */}
+      <CtaCard setPage={setPage} />
+
+    </motion.div>
+  );
+}
+
+// -----------------------------------------------------------------------
+//  DISCOVER VIEW HELPER COMPONENTS (Yeh components upar cut gaye the)
+// -----------------------------------------------------------------------
+
+function CommunityImageCard({ imageUrl, title, author }) {
+  return (
+    <motion.div
+      whileHover={{ y: -8, scale: 1.03 }}
+      transition={{ type: 'spring', stiffness: 300 }}
+      className="relative rounded-lg overflow-hidden group cursor-pointer aspect-auto"
+    >
+      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+        <h4 className="font-bold text-white text-lg">{title}</h4>
+        <p className="text-gray-300 text-sm">by {author}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function TutorialCard({ icon, title, description, onClick }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.03, y: -5 }}
+      onClick={onClick}
+      className="flex-shrink-0 w-[300px] bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-6 
+                 flex gap-5 items-center cursor-pointer border-2 border-gray-700/50 hover:border-purple-500"
+    >
+      <div className="flex-shrink-0 text-purple-400">{icon}</div>
+      <div>
+        <h4 className="font-semibold text-white">{title}</h4>
+        <p className="text-gray-400 text-sm">{description}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function CtaCard({ setPage }) {
+  return (
+    <div className="w-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-10 mt-16 flex flex-col md:flex-row justify-between items-center gap-6">
+      <div>
+        <h2 className="text-3xl font-bold text-white">Ready to create?</h2>
+        <p className="text-lg text-blue-100 mt-1">Jump into the editor and start your own project.</p>
+      </div>
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setPage('tools')} // Links to the tools page
+        className="px-10 py-3 rounded-full font-semibold text-lg bg-white text-purple-700 shadow-lg"
+      >
+        Start Editing
+      </motion.button>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------
 //  Naya ToolCard Components
-// =======================================================================
+// -----------------------------------------------------------------------
 
 function FeaturedToolCard({ icon, title, description, onClick }) {
   return (
@@ -980,7 +1085,6 @@ function BubblesBackground() {
   );
 }
 
-// ⬇️ YAHAN HAI WAHID (SINGLE) 'GradientButton' DEFINITION ⬇️
 // GradientButton (Navbar aur MainView dono use karte hain)
 function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled }) {
   const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";

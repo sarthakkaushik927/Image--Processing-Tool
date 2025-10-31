@@ -27,7 +27,7 @@ export default function AboutUsView({ setPage }) {
                         className="w-full h-80 md:h-full bg-gray-700 rounded-lg overflow-hidden border-4 border-white"
                     >
                         <img 
-                            src="https://placehold.co/300x400/36454F/FFFFFF?text=Photo+Collage" 
+                            src="/aboutus.jpg" 
                             alt="Collage of Photos" 
                             className="w-full h-full object-cover" 
                         />
@@ -35,9 +35,9 @@ export default function AboutUsView({ setPage }) {
                 </div>
                 
                 {/* Content */}
-                <div className="flex-1">
+                <div className="flex flex-col justify-between">
                     <p className="text-gray-200 text-lg leading-relaxed">
-                        Welcome to **FotoFix**, your one-stop solution for smart and simple image processing. We make editing effortless—crop images, enhance sharpness, adjust contrast, and even convert between JPG and PNG formats with ease. Our tools also help you extract text from images instantly.
+                        Welcome to <b>**FotoFix**</b>, your one-stop solution for smart and simple image processing. We make editing effortless—crop images, enhance sharpness, adjust contrast, and even convert between JPG and PNG formats with ease. Our tools also help you extract text from images instantly.
                     </p>
                     <p className="text-gray-200 text-lg leading-relaxed mt-4">
                         At FotoFix, we combine accuracy, speed, and creativity to help you make every image picture-perfect.
