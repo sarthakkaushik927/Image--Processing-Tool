@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-    ArrowLeft, FileText, UploadCloud, Download, Loader2 
-} from 'lucide-react';
+import { ArrowLeft, FileText, UploadCloud, Download, Loader2 } from 'lucide-react';
 
-// =======================================================================
-// AUXILIARY COMPONENT (Must be defined here or imported)
-// =======================================================================
 function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled, icon: Icon }) {
     const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
     const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
@@ -29,72 +24,70 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
     );
 }
 
-// =======================================================================
-//  Text Extractor Workspace Component
-// =======================================================================
-// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
 export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
-    const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
-    const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
+    const [originalImage, setOriginalImage] = useState(null);
+    const [fileObject, setFileObject] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [fileName, setFileName] = useState("image.png");
+    const [extractedText, setExtractedText] = useState("");
 
-    // --- Handlers ---
-
-    // 1. Handles image file selection (Yeh pehle se dataUrl use kar raha hai, perfect)
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) {
+            setFileObject(file);
             setFileName(file.name);
-            setProcessedImageURL(null); // Reset processed image on new upload
+            setExtractedText("");
             const reader = new FileReader();
             reader.onload = (e) => setOriginalImage(e.target.result);
             reader.readAsDataURL(file);
         }
     };
-    
-    // 2. Simulates API call to ML Model
+
+    // 🔥 Integrated OCR API call
     const handleProcessImage = async () => {
-        if (!originalImage) {
+        if (!fileObject) {
             alert("Please upload an image first.");
             return;
         }
 
         setIsLoading(true);
-        setProcessedImageURL(null); 
-        console.log(`Sending image for ML processing: ${fileName}`);
+        setExtractedText("");
 
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
-        // Simulation: Processed image is same as original (dataUrl)
-        const mockProcessedURL = originalImage; 
-        
-        setProcessedImageURL(mockProcessedURL);
-        setIsLoading(false);
-        console.log("ML Processing Complete.");
-    };
+        try {
+            const _id = sessionStorage.getItem("_id") || "anurag11";
+            const apiUrl = import.meta.env.VITE_ML_API || "https://ccc.anurag11.me";
 
-    // ⬇️ STEP 3: 'handleDownload' function ko update karein
-    const handleDownload = () => {
-        if (!processedImageURL) return;
+            const formData = new FormData();
+            formData.append("image", fileObject);
+            formData.append("_id", _id);
 
-        const downloadName = `fotofix_processed_${fileName}`;
+            const response = await fetch(`${apiUrl}/extract-text`, {
+                method: "POST",
+                body: formData,
+            });
 
-        // 1. ⭐️ HomePage ko 'dataUrl' bhej dein (Storage ke liye) ⭐️
-        if (onImageDownloaded) {
-            onImageDownloaded(processedImageURL, downloadName);
+            const result = await response.json();
+            if (result.status === "success") {
+                setExtractedText(result.extracted_text || "No text detected.");
+            } else {
+                alert("OCR failed: " + (result.error || "Unknown error"));
+            }
+        } catch (err) {
+            console.error("Error:", err);
+            alert("An error occurred while processing the image.");
+        } finally {
+            setIsLoading(false);
         }
-
-        // 2. User ke liye download trigger karein
-        const link = document.createElement('a');
-        link.href = processedImageURL;
-        link.download = downloadName; 
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     };
 
-    // --- Render ---
+    const handleDownload = () => {
+        if (!extractedText) return;
+        const blob = new Blob([extractedText], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `extracted_text_${fileName.replace(/\.[^/.]+$/, "")}.txt`;
+        link.click();
+    };
 
     return (
         <motion.div
@@ -103,16 +96,14 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="p-0 md:p-0 text-white max-w-4xl mx-auto" // ⬅️ Max width set karein
+            className="p-0 md:p-0 text-white max-w-4xl mx-auto"
         >
-            {/* Top Bar (Matching Screenshot) */}
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
                     <ArrowLeft size={24} /> <span className="text-xl font-medium">Tools</span>
                 </button>
             </div>
 
-            {/* Tool Title (Matching Screenshot) */}
             <div className="flex flex-col items-center justify-center mb-10">
                 <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
                     <FileText size={48} className="text-purple-400" />
@@ -120,21 +111,13 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                 <h2 className="text-4xl font-bold mt-4">Text Extractor</h2>
             </div>
 
-            {/* Main Workspace Area (Single Column Design) */}
             <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
-                
-                {/* Image Display Area */}
-                {/* ⬇️ BADLAV: 'h-96' ko 'min-h-[300px] md:min-h-[500px]' se badla ⬇️ */}
-                <div className="w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
+                <div className="w-full h-full min-h-[300px] md:min-h-[400px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
                     {originalImage ? (
                         <img
-                            src={processedImageURL || originalImage}
-                            alt="Image for Text Extraction"
+                            src={originalImage}
+                            alt="Uploaded"
                             className="max-w-full max-h-full object-contain"
-                            onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = 'https://placehold.co/600x400/1f2937/9ca3af?text=Image+Load+Error';
-                            }}
                         />
                     ) : (
                         <div className="text-center p-10">
@@ -142,19 +125,15 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                             <p className="text-gray-400 mt-4">Upload an image to start extraction.</p>
                         </div>
                     )}
-                    {/* Status Overlay */}
                     {isLoading && (
                         <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                             <Loader2 size={48} className="text-purple-400 animate-spin" />
-                            <p className="ml-4 text-xl font-medium">Processing...</p>
+                            <p className="ml-4 text-xl font-medium">Extracting Text...</p>
                         </div>
                     )}
                 </div>
 
-                {/* Controls */}
                 <div className="flex flex-wrap justify-center gap-4 w-full">
-                    
-                    {/* Upload Button */}
                     <input 
                         type="file" 
                         id="extractor-upload" 
@@ -169,7 +148,6 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                         <UploadCloud size={20} /> {originalImage ? "Change Image" : "Upload Image"}
                     </label>
 
-                    {/* Process Button */}
                     <GradientButton 
                         text={isLoading ? "Processing..." : "Run Text Extractor"}
                         onClick={handleProcessImage} 
@@ -178,18 +156,21 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
                         icon={isLoading ? Loader2 : FileText}
                     />
 
-                    {/* Download Button */}
                     <GradientButton 
-                        text="Download Result"
+                        text="Download Text"
                         onClick={handleDownload}
-                        disabled={!processedImageURL || isLoading}
+                        disabled={!extractedText || isLoading}
                         icon={Download}
                     />
                 </div>
-                
-                {/* Result Message */}
-                {processedImageURL && (
-                    <p className="mt-4 text-green-400 text-sm">Processing complete! The extracted text/image is ready for download.</p>
+
+                {extractedText && (
+                    <div className="mt-6 w-full bg-[#14122b] border border-purple-500/30 rounded-lg p-4">
+                        <h3 className="text-lg font-semibold mb-2 text-purple-400">Extracted Text:</h3>
+                        <pre className="whitespace-pre-wrap text-gray-300 text-sm">
+                            {extractedText}
+                        </pre>
+                    </div>
                 )}
             </div>
         </motion.div>
