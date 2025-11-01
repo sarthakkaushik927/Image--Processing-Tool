@@ -32,27 +32,51 @@ function GradientButton({ text, isBlue = false, isOutline = false, className = "
 // =======================================================================
 //  Text Extractor Workspace Component
 // =======================================================================
-// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
 export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
     const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
     const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
     const [isLoading, setIsLoading] = useState(false);
     const [fileName, setFileName] = useState("image.png");
+    const [isDragging, setIsDragging] = useState(false); // ⬅️ 1. New state for drag UI
 
     // --- Handlers ---
 
-    // 1. Handles image file selection (Yeh pehle se dataUrl use kar raha hai, perfect)
-    const handleImageUpload = (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (file) {
+    // ⬇️ 2. Refactored logic into a reusable function
+    const processFile = (file) => {
+        if (file && file.type.startsWith('image/')) {
             setFileName(file.name);
             setProcessedImageURL(null); // Reset processed image on new upload
             const reader = new FileReader();
             reader.onload = (e) => setOriginalImage(e.target.result);
             reader.readAsDataURL(file);
+        } else if (file) {
+            alert("Please upload an image file (e.g., png, jpg).");
         }
     };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files && e.target.files[0];
+        processFile(file); // ⬅️ Use new reusable function
+    };
     
+    // ⬇️ 3. New Drag & Drop Handlers
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        processFile(file); // ⬅️ Use new reusable function
+    };
+
     // 2. Simulates API call to ML Model
     const handleProcessImage = async () => {
         if (!originalImage) {
@@ -74,18 +98,15 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         console.log("ML Processing Complete.");
     };
 
-    // ⬇️ STEP 3: 'handleDownload' function ko update karein
     const handleDownload = () => {
         if (!processedImageURL) return;
 
         const downloadName = `fotofix_processed_${fileName}`;
 
-        // 1. ⭐️ HomePage ko 'dataUrl' bhej dein (Storage ke liye) ⭐️
         if (onImageDownloaded) {
             onImageDownloaded(processedImageURL, downloadName);
         }
 
-        // 2. User ke liye download trigger karein
         const link = document.createElement('a');
         link.href = processedImageURL;
         link.download = downloadName; 
@@ -103,7 +124,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="p-0 md:p-0 text-white max-w-4xl mx-auto" // ⬅️ Max width set karein
+            className="p-0 md:p-0 text-white max-w-4xl mx-auto"
         >
             {/* Top Bar (Matching Screenshot) */}
             <div className="flex items-center gap-4 text-gray-400 mb-6">
@@ -123,23 +144,34 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             {/* Main Workspace Area (Single Column Design) */}
             <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
                 
-                {/* Image Display Area */}
-                {/* ⬇️ BADLAV: 'h-96' ko 'min-h-[300px] md:min-h-[500px]' se badla ⬇️ */}
-                <div className="w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6">
+                {/* ⬇️ 4. This is now the drop zone ⬇️ */}
+                <div 
+                    className={`
+                        w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center 
+                        bg-[#1a1834] rounded-lg overflow-hidden relative mb-6
+                        transition-all duration-300
+                        ${isDragging ? 'border-4 border-dashed border-purple-500 scale-[1.02]' : 'border-transparent'}
+                    `}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
                     {originalImage ? (
                         <img
                             src={processedImageURL || originalImage}
                             alt="Image for Text Extraction"
-                            className="max-w-full max-h-full object-contain"
+                            className="max-w-full max-h-full object-contain pointer-events-none"
                             onError={(e) => {
                                 e.target.onerror = null;
                                 e.target.src = 'https://placehold.co/600x400/1f2937/9ca3af?text=Image+Load+Error';
                             }}
                         />
                     ) : (
-                        <div className="text-center p-10">
-                            <UploadCloud size={64} className="text-gray-500 mx-auto" />
-                            <p className="text-gray-400 mt-4">Upload an image to start extraction.</p>
+                        <div className="text-center p-10 pointer-events-none">
+                            <UploadCloud size={64} className={`mx-auto transition-colors ${isDragging ? 'text-purple-400' : 'text-gray-500'}`} />
+                            <p className={`text-gray-400 mt-4 transition-colors ${isDragging ? 'text-white' : 'text-gray-400'}`}>
+                                {isDragging ? "Drop your image here!" : "Drag & drop or upload an image"}
+                            </p>
                         </div>
                     )}
                     {/* Status Overlay */}

@@ -27,3 +27,8 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #9a66f0; /* Lighter purple on hover */
 }
+/* In your index.css or App.css */
+/* In index.css */
+body {
+  overflow-x: hidden;
+}

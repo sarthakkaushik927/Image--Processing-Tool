@@ -2,36 +2,15 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
     ArrowLeft, Sun, Star, UploadCloud, Download, 
-    Droplet, Palette, EyeOff, Minus, RotateCcw // 'RotateCcw' (Reset) icon add kiya
+    Droplet, Palette, EyeOff, Minus, RotateCcw, Loader2 // 'RotateCcw' (Reset) icon add kiya
 } from 'lucide-react'; 
+import GradientButton from '../components/GradientButton';
 
 // --- AUXILIARY COMPONENT (Reuse) ---
-function GradientButton({ text, isBlue = false, isOutline = false, className = "", onClick, disabled, icon: Icon }) {
-    const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
-    const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
-    const outline = "bg-transparent border-2 border-purple-400 text-purple-300 hover:bg-purple-900/50";
-    const buttonClasses = isOutline ? outline : (isBlue ? blueGradient : purpleGradient);
-    const defaultClasses = "w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform flex items-center justify-center gap-2";
-    const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : '';
-    
-    return (
-        <motion.button 
-            whileHover={{ scale: disabled ? 1 : 1.05 }} 
-            whileTap={{ scale: disabled ? 1 : 0.95 }} 
-            onClick={onClick}
-            disabled={disabled}
-            className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
-        > 
-            {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />}
-            {text} 
-        </motion.button>
-    );
-}
 
 // =======================================================================
 //  UNIFIED Adjustments Workspace (Naya 2-Column Design)
 // =======================================================================
-// ⬇️ STEP 1: 'onImageDownloaded' prop ko accept karein
 export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
     const [imageSrc, setImageSrc] = useState(null); // Yeh dataUrl hoga
     const [fileName, setFileName] = useState("image.png");
@@ -43,20 +22,10 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
     const [hueValue, setHueValue] = useState(0); 
     const [sepiaValue, setSepiaValue] = useState(0); 
     const [grayscaleValue, setGrayscaleValue] = useState(0); 
+    const [isDragging, setIsDragging] = useState(false); // ⬅️ 1. New state for drag UI
 
     const imgRef = useRef(null); 
 
-    // ⬇️ STEP 2: 'handleImageUpload' ko 'FileReader' use karne ke liye update karein
-    const handleImageUpload = (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (file) {
-            setFileName(file.name);
-            const reader = new FileReader();
-            reader.onload = (e) => setImageSrc(e.target.result); // ⬅️ dataUrl
-            reader.readAsDataURL(file);
-        }
-    };
-    
     // Resets all slider values
     const handleReset = () => {
         setBrightnessValue(100);
@@ -67,7 +36,42 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
         setGrayscaleValue(0);
     };
 
-    // ⬇️ STEP 3: 'handleDownload' function ko update karein (dataUrl use karne ke liye)
+    // ⬇️ 2. Refactored logic into a reusable function
+    const processFile = (file) => {
+        if (file && file.type.startsWith('image/')) {
+            setFileName(file.name);
+            handleReset(); // ⬅️ Reset sliders on new image
+            const reader = new FileReader();
+            reader.onload = (e) => setImageSrc(e.target.result); // ⬅️ dataUrl
+            reader.readAsDataURL(file);
+        } else if (file) {
+            alert("Please upload an image file (e.g., png, jpg).");
+        }
+    };
+
+    const handleImageUpload = (e) => {
+        const file = e.target.files && e.target.files[0];
+        processFile(file); // ⬅️ Use new reusable function
+    };
+    
+    // ⬇️ 3. New Drag & Drop Handlers
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        processFile(file); // ⬅️ Use new reusable function
+    };
+
     const handleDownload = () => {
         const image = imgRef.current;
         if (!image || !imageSrc) {
@@ -112,7 +116,9 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
         const link = document.createElement('a');
         link.download = downloadName;
         link.href = dataUrl;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
     };
 
 
@@ -146,14 +152,25 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                 <div className="lg:w-2/3">
                     {/* Sticky container image ko top par rakhega */}
                     <div className="sticky top-28"> {/* ⬅️ 'top-28' aapke navbar ki height ke hisab se adjust karein */}
-                        <div className="w-full h-[65vh] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative border-2 border-indigo-400/30">
+                        
+                        {/* ⬇️ 4. This is now the drop zone ⬇️ */}
+                        <div 
+                            className={`
+                                w-full h-[65vh] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative 
+                                transition-all duration-300
+                                ${isDragging ? 'border-4 border-dashed border-purple-500 scale-[1.02]' : 'border-2 border-indigo-400/30'}
+                            `}
+                            onDragOver={handleDragOver}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop}
+                        >
                             {imageSrc ? (
                                 <img 
                                     ref={imgRef}
                                     crossOrigin="anonymous" // Canvas ke liye zaroori
                                     src={imageSrc} 
                                     alt="Input" 
-                                    className="max-w-full max-h-full object-contain"
+                                    className="max-w-full max-h-full object-contain pointer-events-none"
                                     // Visual filter preview
                                     style={{ 
                                         filter: `
@@ -167,9 +184,12 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                     }} 
                                 />
                             ) : (
-                                <div className="text-center p-10">
-                                    <UploadCloud size={64} className="text-gray-500 mx-auto" />
-                                    <p className="text-gray-400 mt-4">Upload an image to start adjusting.</p>
+                                // ⬇️ Updated empty state for drop zone
+                                <div className="text-center p-10 pointer-events-none">
+                                    <UploadCloud size={64} className={`mx-auto transition-colors ${isDragging ? 'text-purple-400' : 'text-gray-500'}`} />
+                                    <p className={`text-gray-400 mt-4 transition-colors ${isDragging ? 'text-white' : 'text-gray-400'}`}>
+                                        {isDragging ? "Drop your image here!" : "Drag & drop or upload an image"}
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -191,6 +211,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="brightness-slider" min="0" max="200" value={brightnessValue}
                                     onChange={(e) => setBrightnessValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-gray-900 via-gray-400 to-white rounded-lg appearance-none cursor-pointer" />
                             </div>
 
@@ -201,6 +222,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="sharpness-slider" min="0" max="100" value={sharpnessValue}
                                     onChange={(e) => setSharpnessValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg appearance-none cursor-pointer" />
                             </div>
                             
@@ -211,6 +233,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="saturation-slider" min="0" max="300" value={saturationValue}
                                     onChange={(e) => setSaturationValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-gray-500 via-pink-400 to-red-600 rounded-lg appearance-none cursor-pointer" />
                             </div>
 
@@ -221,6 +244,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="hue-slider" min="0" max="360" value={hueValue}
                                     onChange={(e) => setHueValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-red-500 via-green-500 to-blue-500 rounded-lg appearance-none cursor-pointer" />
                             </div>
 
@@ -231,6 +255,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="sepia-slider" min="0" max="100" value={sepiaValue}
                                     onChange={(e) => setSepiaValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-white to-orange-800 rounded-lg appearance-none cursor-pointer" />
                             </div>
 
@@ -241,6 +266,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                 </label>
                                 <input type="range" id="grayscale-slider" min="0" max="100" value={grayscaleValue}
                                     onChange={(e) => setGrayscaleValue(parseInt(e.target.value))}
+                                    disabled={!imageSrc} // ⬅️ Disable if no image
                                     className="w-full h-2 bg-gradient-to-r from-gray-900 to-gray-400 rounded-lg appearance-none cursor-pointer" />
                             </div>
 
@@ -251,7 +277,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                         <div className="flex flex-col gap-4 w-full justify-center mt-8">
                             <input type="file" id="adjust-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
                             <label htmlFor="adjust-upload" className="w-full px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
-                                <UploadCloud size={20} /> Upload Image
+                                <UploadCloud size={20} /> {imageSrc ? "Change Image" : "Upload Image"}
                             </label>
                             
                             <div className="flex m-0 flex-col justify-center md:flex-row gap-4">
