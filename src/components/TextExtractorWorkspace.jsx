@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, FileText, UploadCloud, Download, Loader2, Camera } from "lucide-react";
 
-const ML_SERVER = "https://34.131.30.185"; // ML server base URL
+export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
 
 // =======================================================================
 // GradientButton Component

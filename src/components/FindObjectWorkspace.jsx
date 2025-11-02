@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Search, UploadCloud, Loader2, Download, Camera, X } from 'lucide-react';
 import GradientButton from '../components/GradientButton'; // adjust path if necessary
 
-const ML_SERVER = "https://34.131.30.185"; // your ML server base URL
+export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
 
 // -----------------------------
 // Camera capture component
