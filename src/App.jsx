@@ -339,8 +339,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black text-white">
       <AnimatePresence mode="wait">
-        {!isAuthenticated && page !== 'resetPassword' ? ( // ⬅️ 8. UPDATED Condition
-          // --- AUTH FLOW ---
+        {!isAuthenticated && page !== 'resetPassword' ? ( 
+          
           <motion.div
             key="auth-flow"
             initial={{ opacity: 0 }}

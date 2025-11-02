@@ -82,10 +82,8 @@ From background removal to object detection and format conversion — everything
 
 ![Photo Fix UI Preview](./public/Screenshot%202025-11-03%20010621.png)
 
----
 
-## 🧑‍💻 Author
 
-**Anurag Gupta**  
-Full-stack Developer | AI + Cloud Enthusiast  
-📧 [Contact](mailto:anuraggupta11421@gmail.com)
+
+
+

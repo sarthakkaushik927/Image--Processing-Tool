@@ -242,13 +242,13 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             {originalImage ? "Change Image" : "Upload Image"}
           </label>
 
-          {/* Camera */}
+          {/* Camera
           <label
             htmlFor="camera-input"
             className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-blue-400 text-blue-300 hover:bg-blue-700/50 flex items-center justify-center gap-2"
           >
             <Camera size={20} /> Capture from Camera
-          </label>
+          </label> */}
           <input
             type="file"
             id="camera-input"
