@@ -26,6 +26,7 @@ import DobbyFloatingChat from "./components/DobbyFloatingChat";
 // =======================================================================
 const API_BASE_URL = 'https://image-routes.onrender.com';
 
+
 // --- DOWNLOAD HELPERS (FIXED: Using localStorage) ---
 const DOWNLOAD_STORAGE_KEY = 'fotoFixDownloads';
 
@@ -388,7 +389,7 @@ export default function App() {
             />
           )}
       </AnimatePresence>
-      <DobbyFloatingChat />
+      <DobbyFloatingChat isAuthenticated={isAuthenticated}/>
     </div>
   );
 }
