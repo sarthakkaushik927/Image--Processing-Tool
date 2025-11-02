@@ -27,8 +27,8 @@ import DobbyFloatingChat from "./components/DobbyFloatingChat.jsx";
 // =======================================================================
 //  API Configuration
 // =======================================================================
-const API_BASE_URL = 'https://image-routes-2.onrender.com';
-// const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
+// const API_BASE_URL = 'https://image-routes-2.onrender.com';
+const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
 
 
 // --- DOWNLOAD HELPERS (FIXED: Using localStorage) ---
@@ -193,8 +193,8 @@ export default function App() {
     console.log("Attempting LIVE login with:", { email, password });
     
     try {
-      // const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, { email, password });
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, { email, password });
+      // const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
       
       const token = response.data?.token || 'mock-token'; 
       const apiUsername = response.data?.user?.userName || response.data?.userName || response.data?.user?.username || getDisplayNameFromEmail(email);
@@ -222,8 +222,8 @@ export default function App() {
     console.log("Attempting LIVE signup with:", { username, email, password });
     
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { 
-      // const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register`, { 
+      // const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { 
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/register`, { 
         userName: username, 
         email, 
         password, 
