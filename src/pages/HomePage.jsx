@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import localforage from 'localforage'; 
+import localforage from 'localforage';
 import CropWorkspace from '../components/CropWorkspace';
 import TextExtractorWorkspace from '../components/TextExtractorWorkspace';
 import FindObjectWorkspace from '../components/FindObjectWorkspace';
@@ -10,7 +10,7 @@ import SplashPage from '../components/SplashPage';
 import AboutUsView from '../components/AboutUsView';
 import AdjustmentsWorkspace from '../components/AdjustmentsWorkspace';
 import FormatConverterWorkspace from '../components/FormatConverterWorkspace';
-import AccountPage from '../pages/AccountPage'; 
+import AccountPage from '../pages/AccountPage';
 import BubblesBackground from '../components/BubblesBackground';
 import HeaderNav from '../components/HeaderNav';
 import ToolsView from '../components/ToolsView';
@@ -21,7 +21,7 @@ import ProfileView from '../components/ProfileView';
 import DownloadsView from '../components/DownloadsView';
 import SearchView from '../components/SearchView';
 import LoginView from '../components/LoginView';
-
+import toast from 'react-hot-toast';
 
 
 localforage.config({
@@ -29,13 +29,13 @@ localforage.config({
   storeName: 'downloaded_images_store'
 });
 
-export default function HomePage({ 
-    isAuthenticated, onLogin, onLogout, 
-    setPage, page, 
-    username, setUsername, 
-    profileImage, setProfileImage, 
-    userEmail,
-    onSaveDownload 
+export default function HomePage({
+  isAuthenticated, onLogin, onLogout,
+  setPage, page,
+  username, setUsername,
+  profileImage, setProfileImage,
+  userEmail,
+  onSaveDownload
 }) {
   const [showHelp, setShowHelp] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -51,7 +51,7 @@ export default function HomePage({
           setDownloadedImages(storedImages);
         }
       } catch (err) {
-        console.error("Failed to load images from storage:", err);
+        toast.error(`Error loading images from storage: ${err.message}`);
       } finally {
         setIsStorageLoaded(true);
       }
@@ -59,20 +59,20 @@ export default function HomePage({
     loadImagesFromStorage();
   }, []);
 
-  
+
   useEffect(() => {
-    if (isStorageLoaded) { 
+    if (isStorageLoaded) {
       localforage.setItem('fotofix-downloads', downloadedImages).catch(err => {
-        console.error("Failed to save images to IndexedDB:", err);
+        
       });
     }
-  }, [downloadedImages, isStorageLoaded]); 
+  }, [downloadedImages, isStorageLoaded]);
 
 
   const handleImageDownload = (imageUrl, name = 'edited-image.png') => {
     const newImage = { id: Date.now(), url: imageUrl, name: name };
     setDownloadedImages(prevImages => [newImage, ...prevImages]);
-    
+
     if (onSaveDownload) {
       onSaveDownload(imageUrl, name);
     } else {
@@ -80,9 +80,9 @@ export default function HomePage({
     }
   };
 
-  
+
   const handleDeleteImage = (idToDelete) => {
-    setDownloadedImages(prevImages => 
+    setDownloadedImages(prevImages =>
       prevImages.filter(image => image.id !== idToDelete)
     );
   };
@@ -96,10 +96,10 @@ export default function HomePage({
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 2000);
-    return () => clearTimeout(timer); 
+    return () => clearTimeout(timer);
   }, [isAuthenticated]);
 
- 
+
   useEffect(() => {
     if (page !== null) {
       setShowHelp(false);
@@ -127,20 +127,20 @@ export default function HomePage({
         page={page}
         profileImage={profileImage}
       />
-      
-      <main className="flex-1 p-6 md:p-10 relative z-10 w-full overflow-y-auto pt-24"> 
-        
-        <div className="mt-10 md:mt-20"> 
+
+      <main className="flex-1 p-6 md:p-10 relative z-10 w-full overflow-y-auto pt-24">
+
+        <div className="mt-10 md:mt-20">
           <AnimatePresence mode="wait">
-            
+
             {page === 'login' ? (
-              <LoginView 
-                key="login" 
-                setPage={setPage} 
-                onLogin={onLogin} 
+              <LoginView
+                key="login"
+                setPage={setPage}
+                onLogin={onLogin}
               />
-            ) : page === 'discover' ? ( 
-              <DiscoverView 
+            ) : page === 'discover' ? (
+              <DiscoverView
                 key="discover"
                 setPage={setPage}
               />
@@ -159,82 +159,81 @@ export default function HomePage({
               <DobbyIntro key="dobby-intro" setPage={setPage} />
             ) : page === 'dobby-chat' ? (
               <DobbyChat key="dobby-chat" setPage={setPage} />
-              
-            // --- Protected Routes ---
+
             ) : isAuthenticated && page === 'account' ? (
-              <AccountPage 
-                key="account" 
-                onLogout={onLogout} 
+              <AccountPage
+                key="account"
+                onLogout={onLogout}
                 setPage={setPage}
-                username={username} 
-                userEmail={userEmail} 
+                username={username}
+                userEmail={userEmail}
               />
-            ) : isAuthenticated && page === 'downloads' ? ( 
-              <DownloadsView 
-                key="downloads" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'downloads' ? (
+              <DownloadsView
+                key="downloads"
+                setPage={setPage}
                 images={downloadedImages}
-                onDeleteImage={handleDeleteImage}     
-                onDeleteAll={handleDeleteAllImages} 
+                onDeleteImage={handleDeleteImage}
+                onDeleteAll={handleDeleteAllImages}
               />
             ) : page === 'search' ? (
               <SearchView key="search" setPage={setPage} />
-              
-            ) : isAuthenticated && page === 'tools' ? ( 
+
+            ) : isAuthenticated && page === 'tools' ? (
               <ToolsView key="tools" setPage={setPage} />
-              
-            ) : isAuthenticated && page === 'crop' ? ( 
-              <CropWorkspace 
-                key="crop" 
-                setPage={setPage} 
+
+            ) : isAuthenticated && page === 'crop' ? (
+              <CropWorkspace
+                key="crop"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
             ) : isAuthenticated && page === 'text-extractor' ? ( 
-              <TextExtractorWorkspace 
-                key="text-extractor" 
-                setPage={setPage} 
+              <TextExtractorWorkspace
+                key="text-extractor"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-            ) : isAuthenticated && page === 'find-object' ? ( 
-              <FindObjectWorkspace 
-                key="find-object" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'find-object' ? (
+              <FindObjectWorkspace
+                key="find-object"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-            ) : isAuthenticated && page === 'magic-brush' ? ( 
-              <MagicBrushWorkspace 
-                key="magic-brush" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'magic-brush' ? (
+              <MagicBrushWorkspace
+                key="magic-brush"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-            ) : isAuthenticated && page === 'format-converter' ? ( 
-              <FormatConverterWorkspace 
-                key="format-converter" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'format-converter' ? (
+              <FormatConverterWorkspace
+                key="format-converter"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-            ) : isAuthenticated && page === 'adjustments' ? ( 
-              <AdjustmentsWorkspace 
-                key="adjustments" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'adjustments' ? (
+              <AdjustmentsWorkspace
+                key="adjustments"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-            ) : isAuthenticated && page === 'angle-slider' ? ( 
-              <AngleSliderWorkspace 
-                key="angle-slider" 
-                setPage={setPage} 
+            ) : isAuthenticated && page === 'angle-slider' ? (
+              <AngleSliderWorkspace
+                key="angle-slider"
+                setPage={setPage}
                 onImageDownloaded={handleImageDownload}
               />
-              
+
             ) : showHelp ? (
               <HelpView key="help" setShowHelp={setShowHelp} />
 
             ) : (
-              <MainView 
-                key="main" 
-                setShowHelp={setShowHelp} 
-                setPage={setPage} 
-                isAuthenticated={isAuthenticated} 
+              <MainView
+                key="main"
+                setShowHelp={setShowHelp}
+                setPage={setPage}
+                isAuthenticated={isAuthenticated}
               />
             )}
           </AnimatePresence>
@@ -243,6 +242,3 @@ export default function HomePage({
     </motion.div>
   );
 }
-
-
-

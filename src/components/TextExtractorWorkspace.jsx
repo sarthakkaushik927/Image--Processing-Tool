@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, FileText, UploadCloud, Download, Loader2, Camera } from "lucide-react";
+import toast from 'react-hot-toast';
 
 export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
- 
+
 function GradientButton({
   text,
   isBlue = false,
@@ -22,8 +23,8 @@ function GradientButton({
   const buttonClasses = isOutline
     ? outline
     : isBlue
-    ? blueGradient
-    : purpleGradient;
+      ? blueGradient
+      : purpleGradient;
   const defaultClasses =
     "w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform flex items-center justify-center gap-2";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
@@ -36,21 +37,21 @@ function GradientButton({
       disabled={disabled}
       className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
     >
-      {Icon && <Icon size={20} className={disabled ? "animate-spin" : ""} />}
+      {Icon && <Icon size={20} className={disabled && Icon === Loader2 ? "animate-spin" : ""} />}
       {text}
     </motion.button>
   );
 }
 
- 
-export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
+
+export default function TextExtractorWorkspace({ setPage }) {
   const [originalImage, setOriginalImage] = useState(null);
   const [processedText, setProcessedText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [fileName, setFileName] = useState("image.png");
   const [isDragging, setIsDragging] = useState(false);
 
- 
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -76,7 +77,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
       reader.onload = (e) => setOriginalImage(e.target.result);
       reader.readAsDataURL(file);
     } else if (file) {
-      alert("Please upload an image file (e.g., png, jpg).");
+      toast.error("Please upload an image file (e.g., png, jpg).");
     }
   };
 
@@ -85,19 +86,20 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
     processFile(file);
   };
 
- 
+
   const handleCameraCapture = (e) => {
     const file = e.target.files && e.target.files[0];
     processFile(file);
   };
 
- 
+
   const handleProcessImage = async () => {
     if (!originalImage) {
-      alert("Please upload or capture an image first.");
+      toast.error("Please upload or capture an image first.");
       return;
     }
 
+    const toastId = toast.loading('Extracting text...');
     try {
       setIsLoading(true);
       setProcessedText("");
@@ -106,7 +108,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
       const formData = new FormData();
       formData.append("image", blob, fileName);
 
-       
+
       const userId = "anurag";
       formData.append("_id", userId);
 
@@ -123,25 +125,30 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
 
       if (data.status === "success") {
         setProcessedText(data.extracted_text || "No text detected.");
+        toast.success('Text extracted!', { id: toastId });
       } else {
-        alert("Text extraction failed. Try again.");
+        toast.error("Text extraction failed. Try again.", { id: toastId });
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("Error connecting to OCR API.");
+      
+      toast.error("Error connecting to OCR API.", { id: toastId });
     } finally {
       setIsLoading(false);
     }
   };
 
-   
+
   const handleDownload = () => {
-    if (!processedText) return;
+    if (!processedText) {
+      toast.error("No text to download.");
+      return;
+    }
     const blob = new Blob([processedText], { type: "text/plain" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "extracted_text.txt";
     link.click();
+    toast.success("Text downloaded!");
   };
 
   return (
@@ -153,7 +160,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
       transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white max-w-4xl mx-auto"
     >
-       
+
       <div className="flex items-center gap-4 text-gray-400 mb-6">
         <button
           onClick={() => setPage("tools")}
@@ -164,7 +171,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         </button>
       </div>
 
-       
+
       <div className="flex flex-col items-center justify-center mb-10">
         <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
           <FileText size={48} className="text-purple-400" />
@@ -172,15 +179,14 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         <h2 className="text-4xl font-bold mt-4">Text Extractor (OCR)</h2>
       </div>
 
-       
+
       <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
-         
+
         <div
-          className={`w-full min-h-[300px] md:min-h-[400px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6 transition-all duration-300 ${
-            isDragging
+          className={`w-full min-h-[300px] md:min-h-[400px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6 transition-all duration-300 ${isDragging
               ? "border-4 border-dashed border-purple-500 scale-[1.02]"
               : "border-transparent"
-          }`}
+            }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -195,14 +201,12 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             <div className="text-center p-10 pointer-events-none">
               <UploadCloud
                 size={64}
-                className={`mx-auto ${
-                  isDragging ? "text-purple-400" : "text-gray-500"
-                }`}
+                className={`mx-auto ${isDragging ? "text-purple-400" : "text-gray-500"
+                  }`}
               />
               <p
-                className={`text-gray-400 mt-4 ${
-                  isDragging ? "text-white" : ""
-                }`}
+                className={`text-gray-400 mt-4 ${isDragging ? "text-white" : ""
+                  }`}
               >
                 {isDragging
                   ? "Drop your image here!"
@@ -219,9 +223,9 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
           )}
         </div>
 
-         
+
         <div className="flex flex-wrap justify-center gap-4 w-full">
-           
+
           <input
             type="file"
             id="extractor-upload"
@@ -237,7 +241,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             {originalImage ? "Change Image" : "Upload Image"}
           </label>
 
-        
+
           <input
             type="file"
             id="camera-input"
@@ -247,7 +251,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             className="hidden"
           />
 
-           
+
           <GradientButton
             text={isLoading ? "Processing..." : "Run Text Extractor"}
             onClick={handleProcessImage}
@@ -256,7 +260,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             icon={isLoading ? Loader2 : FileText}
           />
 
-          
+
           <GradientButton
             text="Download Text"
             onClick={handleDownload}
@@ -265,7 +269,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
           />
         </div>
 
-         
+
         {processedText && (
           <div className="mt-6 w-full bg-[#14122b] p-4 rounded-lg border border-purple-500 text-left">
             <h3 className="text-lg font-semibold mb-2 text-purple-400">

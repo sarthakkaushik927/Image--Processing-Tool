@@ -12,7 +12,7 @@ export default function HeaderNav({ isAuthenticated, onLogout, setPage, page, pr
 
   // Navigation logic
   const handleNavClick = (pageNameOrPath) => {
-    // ❗️ Discover page ab unprotected hai (sab dekh sakte hain)
+    
     if (!isAuthenticated && ['downloads', 'account', 'profile'].includes(pageNameOrPath)) {
       setPage('login'); 
     } else {
