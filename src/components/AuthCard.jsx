@@ -13,11 +13,10 @@ export default function AuthCard({ children }) {
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="w-full  bg-black flex flex-col md:flex-row"
     >
-      //left
+      
       <AuthIllustration />
       
       
-      //right
       <div className="w-full md:w-1/2 p-8 md:p-12 bg-black flex flex-col justify-center items-center min-h-screen">
         <AnimatePresence mode="wait">
           {children}

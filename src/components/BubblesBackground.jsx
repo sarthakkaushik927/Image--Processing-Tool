@@ -11,7 +11,7 @@ export default function BubblesBackground() {
   return (
     
     <div className="absolute inset-0 overflow-hidden z-0">
-      //1
+    
       <motion.div 
         className="absolute w-96 h-96 bg-purple-800 rounded-full filter blur-3xl"
         initial={{ x: '-10rem', y: '-10rem' }}
@@ -26,7 +26,7 @@ export default function BubblesBackground() {
           ease: 'easeInOut',
         }}
       />
-      //2
+      
       <motion.div 
         className="absolute w-96 h-96 bg-blue-800 rounded-full filter blur-3xl"
         initial={{ x: '30rem', y: '15rem' }} 
@@ -42,7 +42,7 @@ export default function BubblesBackground() {
           delay: 5, 
         }}
       />
-       //3
+       
       <motion.div 
         className="absolute w-80 h-80 bg-indigo-800 rounded-full filter blur-3xl"
         initial={{ x: '10rem', y: '5rem' }} 
