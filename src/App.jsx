@@ -7,32 +7,21 @@ import {
   Download, UserCircle, Search, ArrowLeft, Settings, HelpCircle, LogOut,
   Image as ImageIcon, Loader2
 } from 'lucide-react';
-
-// === Import Pages (Assuming these paths are correct relative to App.jsx) ===
 import LoginPage from './pages/LoginPage.jsx';
 import SignupPage from './pages/SignupPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
-// ⬇️ 1. REMOVED VerifyCodePage ⬇️
-// import VerifyCodePage from './pages/VerifyCodePage.jsx'; 
 import ResetPasswordPage from './pages/ResetPasswordPage.jsx';
 import PasswordChangedPage from './pages/PasswordChangedPage.jsx';
-// ⬇️ 2. ADDED ForgotPasswordSuccessPage ⬇️
 import ForgotPasswordSuccessPage from './pages/ForgotPasswordSuccessPage.jsx';
 import HomePage from './pages/HomePage.jsx';
-import AccountPage from './pages/AccountPage.jsx';
-// === Import Components ===
 import AuthCard from './components/AuthCard.jsx';
 import DobbyFloatingChat from "./components/DobbyFloatingChat.jsx";
 
-// =======================================================================
-//  API Configuration
-// =======================================================================
+
 // const API_BASE_URL = 'https://image-routes-2.onrender.com';
 const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
 
 
-// --- DOWNLOAD HELPERS (FIXED: Using localStorage) ---
-// ... (getSavedDownloads function remains the same) ...
 const DOWNLOAD_STORAGE_KEY = 'fotoFixDownloads';
 
 const getSavedDownloads = () => {
@@ -43,9 +32,7 @@ const getSavedDownloads = () => {
         return [];
     }
 };
-// --------------------------
 
-// ... (getInitialState function remains the same) ...
 const getInitialState = (key, defaultValue) => {
     try {
         const storedValue = localStorage.getItem(key);
@@ -57,7 +44,7 @@ const getInitialState = (key, defaultValue) => {
             try {
                 parsedValue = JSON.parse(parsedValue);
             } catch (e) {
-                // If secondary parse fails, use the current string
+                
             }
         }
         
@@ -69,21 +56,20 @@ const getInitialState = (key, defaultValue) => {
     }
 };
 
-// ... (getDisplayNameFromEmail function remains the same) ...
+
 const getDisplayNameFromEmail = (email) => {
     if (!email) return "Guest";
     const localPart = email.split('@')[0].split(/[.\-_]/)[0];
     return localPart.charAt(0).toUpperCase() + localPart.slice(1);
 }
 
-// ... (generateAvatarUrl function remains the same) ...
+
 const generateAvatarUrl = (name) => {
     const initial = name ? name.charAt(0).toUpperCase() : 'U';
     return `https://placehold.co/40x40/7c3aed/ffffff?text=${initial}`;
 };
 
-// --- LOGOUT CONFIRMATION MODAL COMPONENT ---
-// ... (LogoutConfirmationModal component remains the same) ...
+
 function LogoutConfirmationModal({ onLogout, onCancel }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
@@ -104,7 +90,7 @@ function LogoutConfirmationModal({ onLogout, onCancel }) {
                     </button>
                     <button
                         onClick={onCancel}
-                        className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg"
+                        className="w-full px-6 py-3 rounded-lg bg-linear-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg"
                     >
                         Cancel
                     </button>
@@ -113,12 +99,7 @@ function LogoutConfirmationModal({ onLogout, onCancel }) {
         </div>
     );
 }
-// -----------------------------------------------------------------------------------
-
-
-// =======================================================================
-//  Main App Component (State-Based Navigation)
-// =======================================================================
+//main
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => !!Cookies.get('auth_token'));
   const [page, setPage] = useState(() => isAuthenticated ? null : 'login'); 
@@ -131,35 +112,28 @@ export default function App() {
   const [userEmail, setUserEmail] = useState(initialEmail); 
   const [resetEmail, setResetEmail] = useState('');
   const [showGlobalLogoutModal, setShowGlobalLogoutModal] = useState(false);
-  
-  // ⬇️ 3. ADDED New State for the Token ⬇️
   const [resetToken, setResetToken] = useState(null);
 
-  // ⬇️ 4. ADDED useEffect to read URL for token ⬇️
+ //logout if reset
   useEffect(() => {
-    // Check the URL when the app loads
     const path = window.location.pathname;
     
     if (path.startsWith('/reset-password/')) {
-      // Extract the token from the URL
-      // e.g., /reset-password/YOUR_TOKEN_HERE
       const token = path.split('/')[2];
       
       if (token) {
         console.log("Found reset token in URL:", token);
-        // We are NOT logged in
         setIsAuthenticated(false);
         Cookies.remove('auth_token');
         localStorage.clear();
 
-        setResetToken(token); // ⬅️ Save the token
-        setPage('resetPassword'); // ⬅️ Show the reset password page
+        setResetToken(token); 
+        setPage('resetPassword'); 
       }
     }
-  }, []); // ⬅️ The empty array [ ] means this runs only ONCE on load
+  }, []);
 
-
-  // ... (useEffect for syncing user state remains the same) ...
+//datasync
   useEffect(() => {
     if (isAuthenticated) {
         localStorage.setItem('username', JSON.stringify(username));
@@ -173,7 +147,7 @@ export default function App() {
   }, [username, profileImage, userEmail, isAuthenticated]);
 
 
-  // ... (handleSaveDownload function remains the same) ...
+//save to localstoarage
   const handleSaveDownload = (dataUrl, filename, extension = 'png') => {
     const downloads = getSavedDownloads(); 
     const newDownload = {
@@ -188,7 +162,7 @@ export default function App() {
     return newDownload;
   };
 
-  // ... (handleLogin function remains the same) ...
+ 
   const handleLogin = async (email, password) => {
     console.log("Attempting LIVE login with:", { email, password });
     
@@ -206,7 +180,7 @@ export default function App() {
       setUsername(apiUsername);
       setUserEmail(apiEmail);
       setProfileImage(generateAvatarUrl(apiUsername)); 
-      setPage(null); // Go to Home
+      setPage(null); 
       return response;
 
     } catch (error) {
@@ -217,7 +191,7 @@ export default function App() {
     }
   };
 
-  // ... (handleSignup function remains the same) ...
+
   const handleSignup = async (username, email, password) => {
     console.log("Attempting LIVE signup with:", { username, email, password });
     
@@ -245,11 +219,10 @@ export default function App() {
     }
   };
 
-  // ⬇️ 5. UPDATED handleForgotPassword ⬇️
   const handleForgotPassword = async (email) => {
     console.log("Requesting password reset for:", email);
     
-    // This is the link your backend will email to the user.
+   
     const resetUrl = "https://image-processing-app-sepia.vercel.app/reset-password";
 
     try {
@@ -258,8 +231,8 @@ export default function App() {
           resetUrl 
         });
         
-        setResetEmail(email); // Keep this
-        setPage('forgotPasswordSuccess'); // ⬅️ SHOW THE NEW SUCCESS PAGE
+        setResetEmail(email); 
+        setPage('forgotPasswordSuccess');
         return response;
 
     } catch (error) {
@@ -269,10 +242,7 @@ export default function App() {
     }
   };
 
-  // ⬇️ 6. REMOVED handleVerifyCode ⬇️
-  // const handleVerifyCode = async (code) => { ... };
 
-  // ⬇️ 7. REPLACED handleResetPassword with new logic ⬇️
   const handleResetPassword = async (newPassword) => {
     console.log("Attempting to reset password with new password...");
     
@@ -283,7 +253,7 @@ export default function App() {
     }
 
     try {
-      // Note: The token is in the URL, and the password is in the body
+     
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/auth/reset-password/${resetToken}`, 
         { 
@@ -293,20 +263,18 @@ export default function App() {
       );
       
       alert("Password reset successfully!");
-      setPage('passwordChanged'); // ⬅️ Show the final success page
-      setResetToken(null); // Clear the token
+      setPage('passwordChanged'); 
+      setResetToken(null); 
       return response;
 
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || "Failed to reset password. The link may be expired.";
       alert(errorMessage);
-      setPage('login'); // Send them to login on failure
+      setPage('login'); 
       throw new Error(errorMessage);
     }
   };
 
-
-  // ... (Logout functions remain the same) ...
   const executeLogout = () => {
     console.log("Logging out...");
     Cookies.remove('auth_token');
@@ -335,7 +303,6 @@ export default function App() {
   };
 
 
-  // ======================== RENDER ========================
   return (
     <div className="min-h-screen bg-black text-white">
       <AnimatePresence mode="wait">
@@ -349,7 +316,6 @@ export default function App() {
             className="min-h-screen flex items-center justify-center bg-black" 
           >
             <AuthCard>
-              {/* ⬇️ 9. UPDATED Page Routing Logic ⬇️ */}
               <AnimatePresence mode="wait">
                 {page === 'login' && (
                   <LoginPage
@@ -372,8 +338,6 @@ export default function App() {
                     onForgot={handleForgotPassword}
                   />
                 )}
-
-                {/* --- THIS IS THE NEW PAGE --- */}
                 {page === 'forgotPasswordSuccess' && (
                   <ForgotPasswordSuccessPage
                     key="forgotSuccess"
@@ -381,9 +345,6 @@ export default function App() {
                   />
                 )}
 
-                {/* --- THIS PAGE IS REMOVED --- */}
-                {/* {page === 'verifyCode' && ( ... )} */}
-                
                 {page === 'passwordChanged' && (
                   <PasswordChangedPage
                     key="changed"
@@ -394,9 +355,9 @@ export default function App() {
             </AuthCard>
           </motion.div>
         
-        ) : (page === 'resetPassword' && !isAuthenticated) ? ( // ⬅️ 10. ADDED This block
+        ) : (page === 'resetPassword' && !isAuthenticated) ? ( 
           
-          // --- RESET PASSWORD FLOW (Must be unauthenticated) ---
+         
           <motion.div
             key="reset-flow"
             initial={{ opacity: 0 }}
@@ -416,7 +377,7 @@ export default function App() {
           </motion.div>
 
         ) : (
-           // --- HOME PAGE (Authenticated) ---
+           
           <HomePage
             key="home"
             isAuthenticated={isAuthenticated}
@@ -433,7 +394,7 @@ export default function App() {
         )}
       </AnimatePresence>
       
-      {/* --- GLOBAL LOGOUT MODAL --- */}
+      
       <AnimatePresence>
           {showGlobalLogoutModal && (
             <LogoutConfirmationModal
@@ -443,7 +404,7 @@ export default function App() {
           )}
       </AnimatePresence>
 
-      {/* --- GLOBAL CHATBOT --- */}
+      
       <DobbyFloatingChat isAuthenticated={isAuthenticated}/>
     </div>
   );

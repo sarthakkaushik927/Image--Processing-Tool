@@ -1,34 +1,29 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import "tailwindcss";
+
 
 * {
     font-family: 'Poppins', sans-serif;
 }
-/* Custom Scrollbar Styles for FotoFix */
-
-/* 1. Define the overall scrollbar appearance */
 .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
 }
 
-/* 2. Define the background track */
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #121c3a; /* Deep blue/black background */
+    background: #121c3a; 
 }
 
-/* 3. Define the draggable handle (the "thumb") */
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #7c3aed; /* Purple color matching your theme */
+    background: #7c3aed; 
     border-radius: 10px;
-    border: 2px solid #121c3a; /* Creates a small gap around the thumb */
+    border: 2px solid #121c3a; 
 }
 
-/* 4. Define hover state */
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #9a66f0; /* Lighter purple on hover */
+    background: #9a66f0; 
 }
-/* In your index.css or App.css */
-/* In index.css */
+
 body {
   overflow-x: hidden;
 }

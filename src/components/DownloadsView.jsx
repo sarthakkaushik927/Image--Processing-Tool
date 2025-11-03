@@ -1,12 +1,7 @@
-// src/components/DownloadsView.js
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Trash2, Download, X } from 'lucide-react';
 
-// =======================================================================
-//  DownloadsView
-// =======================================================================
 export default function DownloadsView({ setPage, images, onDeleteImage, onDeleteAll }) {
 
   const handleRedownload = (url, name) => {

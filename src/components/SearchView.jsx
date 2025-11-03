@@ -1,31 +1,28 @@
-// src/components/SearchView.js
-// (Replace the entire file with this)
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search } from 'lucide-react';
-import { toolsData } from '../toolsData'; // ⬅️ IMPORT THE DATA
+import { toolsData } from '../toolsData';  
 
 export default function SearchView({ setPage }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredTools, setFilteredTools] = useState(toolsData);
 
-  // This effect runs whenever the user types in the search box
+   
   useEffect(() => {
     if (searchQuery === '') {
-      setFilteredTools(toolsData); // Show all tools if search is empty
+      setFilteredTools(toolsData); 
     } else {
       const lowerCaseQuery = searchQuery.toLowerCase();
-      // Filter by title OR description
+       
       const results = toolsData.filter(tool => 
         tool.title.toLowerCase().includes(lowerCaseQuery) ||
         tool.description.toLowerCase().includes(lowerCaseQuery)
       );
       setFilteredTools(results);
     }
-  }, [searchQuery]); // Re-run this effect when searchQuery changes
+  }, [searchQuery]);  
 
-  // Function to navigate when a result is clicked
+   
   const handleResultClick = (page) => {
     setPage(page);
   };
@@ -37,7 +34,7 @@ export default function SearchView({ setPage }) {
       animate={{ opacity: 1, y: 0 }} 
       exit={{ opacity: 0, y: -20 }} 
       transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white max-w-3xl mx-auto" // Centered
+      className="p-0 md:p-0 text-white max-w-3xl mx-auto" 
     >
       <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6"> 
         <ArrowLeft size={18} /> Back to Home 
@@ -45,7 +42,7 @@ export default function SearchView({ setPage }) {
 
       <h2 className="text-4xl font-bold text-center mb-8">Search Tools</h2>
 
-      {/* The Search Input Bar */}
+      
       <div className="relative w-full mb-10">
         <input 
           type="text" 
@@ -78,7 +75,7 @@ export default function SearchView({ setPage }) {
   );
 }
 
-// Helper component for rendering a single search result
+ 
 function SearchResultCard({ tool, onClick }) {
   return (
     <motion.div

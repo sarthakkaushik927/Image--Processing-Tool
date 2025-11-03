@@ -3,10 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, FileText, UploadCloud, Download, Loader2, Camera } from "lucide-react";
 
 export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
-
-// =======================================================================
-// GradientButton Component
-// =======================================================================
+ 
 function GradientButton({
   text,
   isBlue = false,
@@ -45,9 +42,7 @@ function GradientButton({
   );
 }
 
-// =======================================================================
-// Text Extractor Workspace Component
-// =======================================================================
+ 
 export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
   const [originalImage, setOriginalImage] = useState(null);
   const [processedText, setProcessedText] = useState("");
@@ -55,7 +50,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
   const [fileName, setFileName] = useState("image.png");
   const [isDragging, setIsDragging] = useState(false);
 
-  // Drag and Drop Handlers
+ 
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -90,13 +85,13 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
     processFile(file);
   };
 
-  // Camera capture
+ 
   const handleCameraCapture = (e) => {
     const file = e.target.files && e.target.files[0];
     processFile(file);
   };
 
-  // OCR API integration
+ 
   const handleProcessImage = async () => {
     if (!originalImage) {
       alert("Please upload or capture an image first.");
@@ -111,7 +106,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
       const formData = new FormData();
       formData.append("image", blob, fileName);
 
-      // If no session id is available, fallback to hardcoded id "anurag"
+       
       const userId = "anurag";
       formData.append("_id", userId);
 
@@ -139,7 +134,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
     }
   };
 
-  // Download extracted text
+   
   const handleDownload = () => {
     if (!processedText) return;
     const blob = new Blob([processedText], { type: "text/plain" });
@@ -158,7 +153,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
       transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white max-w-4xl mx-auto"
     >
-      {/* Top Bar */}
+       
       <div className="flex items-center gap-4 text-gray-400 mb-6">
         <button
           onClick={() => setPage("tools")}
@@ -169,7 +164,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         </button>
       </div>
 
-      {/* Title */}
+       
       <div className="flex flex-col items-center justify-center mb-10">
         <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
           <FileText size={48} className="text-purple-400" />
@@ -177,9 +172,9 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
         <h2 className="text-4xl font-bold mt-4">Text Extractor (OCR)</h2>
       </div>
 
-      {/* Main Area */}
+       
       <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl shadow-2xl p-6 flex flex-col items-center border-2 border-indigo-400/30">
-        {/* Drop zone */}
+         
         <div
           className={`w-full min-h-[300px] md:min-h-[400px] flex items-center justify-center bg-[#1a1834] rounded-lg overflow-hidden relative mb-6 transition-all duration-300 ${
             isDragging
@@ -224,9 +219,9 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
           )}
         </div>
 
-        {/* Buttons */}
+         
         <div className="flex flex-wrap justify-center gap-4 w-full">
-          {/* Upload */}
+           
           <input
             type="file"
             id="extractor-upload"
@@ -242,13 +237,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             {originalImage ? "Change Image" : "Upload Image"}
           </label>
 
-          {/* Camera
-          <label
-            htmlFor="camera-input"
-            className="w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-blue-400 text-blue-300 hover:bg-blue-700/50 flex items-center justify-center gap-2"
-          >
-            <Camera size={20} /> Capture from Camera
-          </label> */}
+        
           <input
             type="file"
             id="camera-input"
@@ -258,7 +247,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             className="hidden"
           />
 
-          {/* Process */}
+           
           <GradientButton
             text={isLoading ? "Processing..." : "Run Text Extractor"}
             onClick={handleProcessImage}
@@ -267,7 +256,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
             icon={isLoading ? Loader2 : FileText}
           />
 
-          {/* Download */}
+          
           <GradientButton
             text="Download Text"
             onClick={handleDownload}
@@ -276,7 +265,7 @@ export default function TextExtractorWorkspace({ setPage, onImageDownloaded }) {
           />
         </div>
 
-        {/* Result */}
+         
         {processedText && (
           <div className="mt-6 w-full bg-[#14122b] p-4 rounded-lg border border-purple-500 text-left">
             <h3 className="text-lg font-semibold mb-2 text-purple-400">

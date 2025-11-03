@@ -81,7 +81,7 @@ export default function DobbyFloatingChat({ isAuthenticated }) {
               <DobbyIntro onStartChat={handleStartChat} />
             ) : (
               <>
-                {/* HEADER */}
+                 
                 <div className="border-b border-gray-700 p-4 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="bg-[#1f1f3d] p-2 rounded-xl border border-purple-500">
@@ -94,7 +94,7 @@ export default function DobbyFloatingChat({ isAuthenticated }) {
                   </button>
                 </div>
 
-                {/* MESSAGES */}
+                 
                 <div className="flex-1 px-4 pr-2 overflow-y-auto mt-3 space-y-3">
                   {messages.map((msg, i) => (
                     <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -113,7 +113,7 @@ export default function DobbyFloatingChat({ isAuthenticated }) {
                   )}
                 </div>
 
-                {/* INPUT */}
+                 
                 <div className="p-4"> 
                   <div className="flex items-center bg-[#1f1f3d] border border-purple-500/50 rounded-full p-1.5">
                     <input

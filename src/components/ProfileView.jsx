@@ -1,15 +1,8 @@
-// src/components/ProfileView.js
-
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Edit2 } from 'lucide-react';
-
-// ⬇️ Import the GradientButton component ⬇️
 import GradientButton from './GradientButton';
-
-// =======================================================================
-//  Profile View
-// =======================================================================
+ 
 export default function ProfileView({ setPage, username, setUsername, profileImage, setProfileImage }) {
   const [nickname, setNickname] = useState(username);
   const [localProfileImage, setLocalProfileImage] = useState(profileImage);
@@ -30,7 +23,7 @@ export default function ProfileView({ setPage, username, setUsername, profileIma
   const handleSave = () => {
     setUsername(nickname);
     setProfileImage(localProfileImage);
-    setPage(null); // Go back to home
+    setPage(null);  
   };
 
   return (

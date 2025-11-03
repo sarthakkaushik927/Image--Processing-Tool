@@ -1,18 +1,11 @@
-// src/components/HeaderNav.js
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, LogOut, Home, Download, UserCircle, 
   Menu, X, LogIn, LayoutGrid 
 } from 'lucide-react';
-
-// ⬇️ We need to import the GradientButton we just made ⬇️
 import GradientButton from './GradientButton'; 
-
-// =======================================================================
-//  Header Navigation (Interactive "Pill" Design)
-// =======================================================================
+ 
 export default function HeaderNav({ isAuthenticated, onLogout, setPage, page, profileImage }) {
   const [isOpen, setIsOpen] = useState(false);
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -28,10 +21,10 @@ export default function HeaderNav({ isAuthenticated, onLogout, setPage, page, pr
     setIsOpen(false);
   }
 
-  // Links ki list
+  
   const navLinks = [
     { name: "Home", page: null, icon: <Home size={18} /> },
-    { name: "Discover", page: "discover", icon: <LayoutGrid size={18} /> }, // ⬅️ NAYA LINK
+    { name: "Discover", page: "discover", icon: <LayoutGrid size={18} /> }, 
     { name: "Downloads", page: "downloads", icon: <Download size={18} /> },
     { name: "Account", page: "account", icon: <UserCircle size={18} /> },
     { name: "Search", page: "search", icon: <Search size={18} /> }
@@ -128,9 +121,7 @@ export default function HeaderNav({ isAuthenticated, onLogout, setPage, page, pr
   );
 }
 
-// -----------------------------------------------------------------------
-// Helper Component: NavItem (Desktop "Pill" style)
-// -----------------------------------------------------------------------
+ 
 function NavItem({ text, icon, isActive, onClick }) {
   return (
     <li
@@ -154,9 +145,7 @@ function NavItem({ text, icon, isActive, onClick }) {
   );
 }
 
-// -----------------------------------------------------------------------
-// Helper Component: AnimatedMobileMenu
-// -----------------------------------------------------------------------
+ 
 const menuVariants = {
   closed: { opacity: 0, height: 0 },
   open: { 
@@ -209,9 +198,7 @@ function AnimatedMobileMenu({ page, isAuthenticated, onLogout, handleNavClick, n
   );
 }
 
-// -----------------------------------------------------------------------
-// Helper Component: MobileNavItem
-// -----------------------------------------------------------------------
+ 
 function MobileNavItem({ icon, text, isActive, onClick }) {
   return (
     <div 

@@ -1,15 +1,9 @@
-// src/components/MainView.js
-
 import React from 'react';
 import { motion } from 'framer-motion';
-
-// ⬇️ Import the buttons it needs ⬇️
 import GradientButton from './GradientButton';
 import SmallButton from './SmallButton';
 
-// =======================================================================
-//  Main View
-// =======================================================================
+ 
 export default function MainView({ setShowHelp, setPage, isAuthenticated }) {
   
   const handleCreateClick = () => {
@@ -22,7 +16,7 @@ export default function MainView({ setShowHelp, setPage, isAuthenticated }) {
   
   const handleGenerateClick = () => {
     if (isAuthenticated) {
-      alert("Generate feature coming soon!"); 
+      setPage();
     } else {
       setPage('login');
     }

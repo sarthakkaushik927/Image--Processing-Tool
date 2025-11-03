@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AuthIllustration from './AuthIllustration.jsx'; // Corrected import
+import AuthIllustration from './AuthIllustration.jsx'; 
 
 
 export default function AuthCard({ children }) {
@@ -13,11 +13,11 @@ export default function AuthCard({ children }) {
       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       className="w-full  bg-black flex flex-col md:flex-row"
     >
-      {/* Left Side (Illustration) */}
+      //left
       <AuthIllustration />
       
       
-      {/* Right Side (form) */}
+      //right
       <div className="w-full md:w-1/2 p-8 md:p-12 bg-black flex flex-col justify-center items-center min-h-screen">
         <AnimatePresence mode="wait">
           {children}

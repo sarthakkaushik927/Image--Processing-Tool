@@ -11,7 +11,7 @@ export default function SplashPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
         >
-            {/* FotoFix Logo Icon */}
+            
             <motion.div
                 initial={{ scale: 0.5, rotate: -90 }}
                 animate={{ scale: 1, rotate: 0 }}
@@ -21,7 +21,7 @@ export default function SplashPage() {
                 <Camera size={80} strokeWidth={1} />
             </motion.div>
             
-            {/* Text */}
+            
             <h1 className="text-5xl font-extrabold mt-8 tracking-widest">
                 FotoFix
             </h1>

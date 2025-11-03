@@ -1,19 +1,8 @@
-// src/components/LoginView.js
-
 import React from 'react';
 import { motion } from 'framer-motion';
-import GradientButton from './GradientButton'; // ⬅️ Import the button
-
-// =======================================================================
-//  LoginView Component (Placeholder)
-// =======================================================================
+import GradientButton from './GradientButton';  
+ 
 export default function LoginView({ setPage, onLogin }) {
-  
-  const handleLoginClick = () => {
-    if (onLogin) {
-      alert("Please use the main login form. This is a fallback.");
-    }
-  };
   
   return (
     <motion.div

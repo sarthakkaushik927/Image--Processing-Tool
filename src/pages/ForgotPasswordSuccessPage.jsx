@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MailCheck, ArrowRight } from 'lucide-react';
-
 import AuthButton from '../components/AuthButton';
 import AuthPageWrapper from '../components/AuthPageWrapper';
 
-// This component is shown after the user successfully requests a reset link
+
 export default function ForgotPasswordSuccessPage({ setPage }) {
   return (
     <AuthPageWrapper>

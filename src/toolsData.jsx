@@ -1,6 +1,3 @@
-// src/toolsData.js
-// (Create this new file)
-
 import React from 'react';
 import { 
   Crop, Repeat, Wand2, FileText, 

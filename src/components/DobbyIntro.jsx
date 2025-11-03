@@ -1,9 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Bot } from 'lucide-react'; 
-
-// This component is shown inside the floating chat window
-// It receives a function to switch the view to the chat
 export default function DobbyIntro({ onStartChat }) {
     return (
         <motion.div
@@ -27,7 +24,7 @@ export default function DobbyIntro({ onStartChat }) {
             <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={onStartChat} // Use the prop to switch views
+                onClick={onStartChat}  
                 className="mt-6 px-8 py-3 rounded-full font-semibold bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg"
             >
                 Start Chatting

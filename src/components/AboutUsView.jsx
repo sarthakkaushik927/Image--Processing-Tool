@@ -17,9 +17,9 @@ export default function AboutUsView({ setPage }) {
 
             <div className="bg-[#1f1f3d]/50 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border-2 border-indigo-400/30 flex flex-col md:flex-row gap-8">
                 
-                {/* Image Collage (Matching Screenshot) */}
+                
                 <div className="md:w-1/3 flex-shrink-0">
-                    {/* Placeholder for the collage image */}
+                    
                     <motion.div
                         initial={{ rotateY: -90 }}
                         animate={{ rotateY: 0 }}
@@ -34,7 +34,7 @@ export default function AboutUsView({ setPage }) {
                     </motion.div>
                 </div>
                 
-                {/* Content */}
+                
                 <div className="flex flex-col justify-between">
                     <p className="text-gray-200 text-lg leading-relaxed">
                         Welcome to <b>**FotoFix**</b>, your one-stop solution for smart and simple image processing. We make editing effortless—crop images, enhance sharpness, adjust contrast, and even convert between JPG and PNG formats with ease. Our tools also help you extract text from images instantly.

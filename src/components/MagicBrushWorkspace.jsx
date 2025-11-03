@@ -10,14 +10,10 @@ import {
     CheckCircle,
 } from "lucide-react";
 
-// ========================================================
-//  CONFIG
-// ========================================================
+ 
 export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
 
-// ========================================================
-//  REUSABLE BUTTON
-// ========================================================
+ 
 function GradientButton({
     text,
     isBlue = false,
@@ -56,9 +52,7 @@ function GradientButton({
     );
 }
 
-// ========================================================
-//  MAGIC BRUSH WORKSPACE
-// ========================================================
+ 
 export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
     const [originalImage, setOriginalImage] = useState(null);
     const [processedImageURL, setProcessedImageURL] = useState(null);
@@ -69,17 +63,13 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
 
     const fileInputRef = useRef(null);
 
-    // -----------------------------
-    //  HANDLE FILE SELECTION
-    // -----------------------------
+    
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
         if (file) processFile(file);
     };
 
-    // -----------------------------
-    //  PROCESS FILE (Upload/Drag)
-    // -----------------------------
+     
     const processFile = (file) => {
         if (!file.type.startsWith("image/")) {
             alert("Please upload a valid image file.");
@@ -93,9 +83,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         reader.readAsDataURL(file);
     };
 
-    // -----------------------------
-    //  DRAG & DROP HANDLERS
-    // -----------------------------
+    
     const handleDragOver = (e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -113,9 +101,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         if (file) processFile(file);
     };
 
-    // -----------------------------
-    //  HANDLE BACKGROUND REMOVAL
-    // -----------------------------
+     
     const handleRemoveBackground = async () => {
         if (!fileObj) return;
         setIsLoading(true);
@@ -124,7 +110,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         try {
             const formData = new FormData();
             formData.append("image", fileObj);
-            formData.append("_id", "anurag"); // default id if no session user
+            formData.append("_id", "anurag"); 
 
             const res = await fetch(`${ML_SERVER}/remove-bg`, {
                 method: "POST",
@@ -148,9 +134,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         }
     };
 
-    // -----------------------------
-    //  HANDLE DOWNLOAD (FORCED SAVE)
-    // -----------------------------
+    
     const handleDownload = async () => {
         if (!processedImageURL) return;
 
@@ -180,9 +164,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         }
     };
 
-    // ========================================================
-    //  UI SECTION
-    // ========================================================
+     
     return (
         <motion.div
             key="magic-brush-workspace"
@@ -192,7 +174,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
             transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white max-w-5xl mx-auto"
         >
-            {/* --- TOP BAR --- */}
+             
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button
                     onClick={() => setPage("tools")}
@@ -203,7 +185,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                 </button>
             </div>
 
-            {/* --- HEADER --- */}
+            
             <div className="flex flex-col items-center justify-center mb-10">
                 <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
                     <Wand2 size={48} className="text-purple-400" />
@@ -211,10 +193,10 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                 <h2 className="text-4xl font-bold mt-4">Magic Background Remover</h2>
             </div>
 
-            {/* --- MAIN AREA --- */}
+            
             <div className="bg-[#1f1f3d]/50 p-4 md:p-6 flex flex-col items-center border-2 border-indigo-400/30 rounded-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
-                    {/* Original Image / Upload Zone */}
+                     
                     <div
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
@@ -257,7 +239,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                         />
                     </div>
 
-                    {/* Processed Image */}
+                     
                     <div className="flex flex-col bg-[#1a1834] rounded-lg p-4 relative">
                         <h3 className="text-lg font-semibold text-gray-400 mb-2 text-center">
                             Result
@@ -292,7 +274,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                     </div>
                 </div>
 
-                {/* --- CONTROLS --- */}
+                 
                 <div className="flex flex-col md:flex-row justify-center gap-4 w-full mt-8">
                     <GradientButton
                         text={isLoading ? "Processing..." : "Remove Background"}

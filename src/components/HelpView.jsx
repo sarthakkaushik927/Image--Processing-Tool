@@ -1,15 +1,8 @@
-// src/components/HelpView.js
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search, Rocket, Wrench, FileText } from 'lucide-react';
-
-// ⬇️ Import the HelpCard component it needs ⬇️
 import HelpCard from './HelpCard';
 
-// =======================================================================
-//  Help View
-// =======================================================================
 export default function HelpView({ setShowHelp }) {
   return (
     <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ type: 'spring', stiffness: 260, damping: 20 }} >

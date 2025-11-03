@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import localforage from 'localforage'; 
 import CropWorkspace from '../components/CropWorkspace';
@@ -24,16 +24,11 @@ import LoginView from '../components/LoginView';
 
 
 
-// localForage storage ka naam configure karein
 localforage.config({
   name: 'FotoFixDB',
   storeName: 'downloaded_images_store'
 });
 
-
-// =======================================================================
-//  Home Page (Main Component)
-// =======================================================================
 export default function HomePage({ 
     isAuthenticated, onLogin, onLogout, 
     setPage, page, 
@@ -47,7 +42,7 @@ export default function HomePage({
   const [downloadedImages, setDownloadedImages] = useState([]);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
-  // DATA LOAD KARNE KA useEffect
+
   useEffect(() => {
     const loadImagesFromStorage = async () => {
       try {
@@ -64,7 +59,7 @@ export default function HomePage({
     loadImagesFromStorage();
   }, []);
 
-  // DATA SAVE KARNE KA useEffect
+  
   useEffect(() => {
     if (isStorageLoaded) { 
       localforage.setItem('fotofix-downloads', downloadedImages).catch(err => {
@@ -73,7 +68,7 @@ export default function HomePage({
     }
   }, [downloadedImages, isStorageLoaded]); 
 
-  // Nayi image ko list mein add karne ka handler
+
   const handleImageDownload = (imageUrl, name = 'edited-image.png') => {
     const newImage = { id: Date.now(), url: imageUrl, name: name };
     setDownloadedImages(prevImages => [newImage, ...prevImages]);
@@ -85,19 +80,18 @@ export default function HomePage({
     }
   };
 
-  // DELETE IMAGE HANDLER
+  
   const handleDeleteImage = (idToDelete) => {
     setDownloadedImages(prevImages => 
       prevImages.filter(image => image.id !== idToDelete)
     );
   };
 
-  // DELETE ALL HANDLER
+
   const handleDeleteAllImages = () => {
     setDownloadedImages([]);
   };
 
-  // Splash Screen Timer
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSplash(false);
@@ -105,7 +99,7 @@ export default function HomePage({
     return () => clearTimeout(timer); 
   }, [isAuthenticated]);
 
-  // Reset showHelp on page change
+ 
   useEffect(() => {
     if (page !== null) {
       setShowHelp(false);
@@ -113,14 +107,14 @@ export default function HomePage({
   }, [page]);
 
 
-  // RENDER SPLASH SCREEN IF ACTIVE
+
   if (showSplash) {
     return <SplashPage />;
   }
 
   return (
     <motion.div
-      className="flex min-h-screen bg-gradient-to-b from-[#1c1c3a] to-[#121c3a] text-white relative"
+      className="flex min-h-screen bg-linear-to-b from-[#1c1c3a] to-[#121c3a] text-white relative"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -145,7 +139,7 @@ export default function HomePage({
                 setPage={setPage} 
                 onLogin={onLogin} 
               />
-            ) : page === 'discover' ? ( // ⬅️ NAYA DISCOVER PAGE ROUTE
+            ) : page === 'discover' ? ( 
               <DiscoverView 
                 key="discover"
                 setPage={setPage}

@@ -1,24 +1,21 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Repeat, UploadCloud, Download, Loader2 } from 'lucide-react'; // Added Loader2 for button
+import { ArrowLeft, Repeat, UploadCloud, Download, Loader2 } from 'lucide-react'; 
 import GradientButton from '../components/GradientButton';
-// =======================================================================
-//  Angle Slider Workspace Component
-// =======================================================================
+
 export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
-    const [imageSrc, setImageSrc] = useState(null); // Yeh dataUrl hoga
+    const [imageSrc, setImageSrc] = useState(null); 
     const [angle, setAngle] = useState(0); 
     const [fileName, setFileName] = useState("image.png");
     const imgRef = useRef(null); 
-    const [isDragging, setIsDragging] = useState(false); // ⬅️ 1. New state for drag UI
-
-    // ⬇️ 2. Refactored logic into a reusable function
+    const [isDragging, setIsDragging] = useState(false); 
+  
     const processFile = (file) => {
         if (file && file.type.startsWith('image/')) {
             setFileName(file.name);
-            setAngle(0); // Reset angle on new image
+            setAngle(0);
             const reader = new FileReader();
-            reader.onload = (e) => setImageSrc(e.target.result); // ⬅️ dataUrl
+            reader.onload = (e) => setImageSrc(e.target.result); 
             reader.readAsDataURL(file);
         } else if (file) {
             alert("Please upload an image file (e.g., png, jpg).");
@@ -27,10 +24,10 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
 
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
-        processFile(file); // ⬅️ Use new reusable function
+        processFile(file); 
     };
 
-    // ⬇️ 3. New Drag & Drop Handlers
+  
     const handleDragOver = (e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -45,7 +42,7 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
         e.preventDefault();
         setIsDragging(false);
         const file = e.dataTransfer.files && e.dataTransfer.files[0];
-        processFile(file); // ⬅️ Use new reusable function
+        processFile(file); 
     };
 
     const handleDownload = () => {
@@ -62,13 +59,13 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
         const h = image.naturalHeight;
         const angleRad = angle * (Math.PI / 180);
         
-        // Calculate new canvas size to fit the rotated image
+ 
         const absSin = Math.abs(Math.sin(angleRad));
         const absCos = Math.abs(Math.cos(angleRad));
         canvas.width = Math.ceil(w * absCos + h * absSin);
         canvas.height = Math.ceil(w * absSin + h * absCos);
         
-        // Translate to the center, rotate, and draw the image off-center
+        
         ctx.translate(canvas.width / 2, canvas.height / 2);
         ctx.rotate(angleRad);
         ctx.drawImage(image, -w / 2, -h / 2, w, h);
@@ -111,7 +108,7 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
 
             <div className="bg-[#1f1f3d]/50 p-6 flex flex-col items-center border-2 border-indigo-400/30 rounded-2xl">
                 
-                {/* ⬇️ 4. This is now the drop zone ⬇️ */}
+                
                 <div 
                     className={`
                         w-full h-full min-h-[300px] md:min-h-[500px] flex items-center justify-center 
@@ -133,7 +130,7 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
                             style={{ transform: `rotate(${angle}deg)` }} 
                         />
                     ) : (
-                        // ⬇️ Updated empty state for drop zone
+                        
                         <div className="text-center p-10 pointer-events-none">
                             <UploadCloud size={64} className={`mx-auto transition-colors ${isDragging ? 'text-purple-400' : 'text-gray-500'}`} />
                             <p className={`text-gray-400 mt-4 transition-colors ${isDragging ? 'text-white' : 'text-gray-400'}`}>
@@ -153,7 +150,7 @@ export default function AngleSliderWorkspace({ setPage, onImageDownloaded }) {
                         value={angle}
                         onChange={(e) => setAngle(parseInt(e.target.value))}
                         className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                        disabled={!imageSrc} // ⬅️ Disable slider if no image
+                        disabled={!imageSrc} 
                     />
                 </div>
                 

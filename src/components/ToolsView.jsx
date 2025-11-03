@@ -1,16 +1,10 @@
-// src/components/ToolsView.js
-// (Replace the entire file with this)
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronRight, Sun } from 'lucide-react';
-import { toolsData } from '../toolsData'; // ⬅️ IMPORT THE DATA
-
-// =======================================================================
-//  Tools View Component
-// =======================================================================
+import { toolsData } from '../toolsData';  
+ 
 export default function ToolsView({ setPage }) {
-  // Filter tools based on their 'type'
+ 
   const featuredTools = toolsData.filter(tool => tool.type === 'featured');
   const standardTools = toolsData.filter(tool => tool.type === 'standard');
 
@@ -36,11 +30,11 @@ export default function ToolsView({ setPage }) {
 
       <h3 className="text-2xl font-semibold text-purple-300 mb-4">Featured Tool</h3>
       
-      {/* ⬇️ Map over the featured tools ⬇️ */}
+       
       {featuredTools.map(tool => (
         <FeaturedToolCard
           key={tool.page}
-          // Use a larger icon for the featured card, overriding the one from data
+ 
           icon={<Sun size={40} />} 
           title={tool.title}
           description={tool.description}
@@ -51,7 +45,7 @@ export default function ToolsView({ setPage }) {
       <h3 className="text-2xl font-semibold text-purple-300 mt-12 mb-4">All Tools</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 ">
         
-        {/* ⬇️ Map over the standard tools ⬇️ */}
+         
         {standardTools.map(tool => (
           <StandardToolCard
             key={tool.page}
@@ -67,10 +61,7 @@ export default function ToolsView({ setPage }) {
   );
 }
 
-// -----------------------------------------------------------------------
-//  ToolCard Helper Components (No changes needed here)
-// -----------------------------------------------------------------------
-
+ 
 function FeaturedToolCard({ icon, title, description, onClick }) {
   return (
     <motion.div

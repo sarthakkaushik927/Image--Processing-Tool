@@ -3,23 +3,18 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Wand2, UploadCloud, Download, Loader2, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import GradientButton from '../components/GradientButton';
 
-// =======================================================================
-//  Magic Brush (Background Remover) Workspace
-// =======================================================================
 export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
-    const [originalImage, setOriginalImage] = useState(null); // Yeh dataUrl hoga
-    const [processedImageURL, setProcessedImageURL] = useState(null); // Yeh bhi dataUrl hoga
+    const [originalImage, setOriginalImage] = useState(null); 
+    const [processedImageURL, setProcessedImageURL] = useState(null); 
     const [isLoading, setIsLoading] = useState(false);
     const [fileName, setFileName] = useState("image.png");
-    const [isDragging, setIsDragging] = useState(false); // ⬅️ 1. New state for drag UI
-
-    // ⬇️ 2. Refactored logic into a reusable function
+    const [isDragging, setIsDragging] = useState(false);
     const processFile = (file) => {
         if (file && file.type.startsWith('image/')) {
-            setFileName(file.name.split('.').slice(0, -1).join('.') + '.png'); // Force .png output
+            setFileName(file.name.split('.').slice(0, -1).join('.') + '.png'); 
             setProcessedImageURL(null); 
             const reader = new FileReader();
-            reader.onload = (e) => setOriginalImage(e.target.result); // dataUrl
+            reader.onload = (e) => setOriginalImage(e.target.result); 
             reader.readAsDataURL(file);
         } else if (file) {
             alert("Please upload an image file (e.g., png, jpg).");
@@ -28,10 +23,9 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
 
     const handleImageUpload = (e) => {
         const file = e.target.files && e.target.files[0];
-        processFile(file); // ⬅️ Use new reusable function
-    };
+        processFile(file); 
     
-    // ⬇️ 3. New Drag & Drop Handlers
+    };
     const handleDragOver = (e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -46,20 +40,19 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         e.preventDefault();
         setIsDragging(false);
         const file = e.dataTransfer.files && e.dataTransfer.files[0];
-        processFile(file); // ⬅️ Use new reusable function
+        processFile(file);  
     };
 
-    // Simulates Backend API call
+     
     const handleRemoveBackground = async () => {
         if (!originalImage) return;
         setIsLoading(true);
         setProcessedImageURL(null);
 
-        console.log("Sending to backend for background removal...");
-        await new Promise(resolve => setTimeout(resolve, 3000));
+         
         
-        // SIMULATION: Man lete hain backend ne processed image ka dataUrl return kiya
-        const mockProcessedURL = originalImage; // (Yahan aapka asli API response aayega)
+         
+        const mockProcessedURL = originalImage;  
         
         setProcessedImageURL(mockProcessedURL);
         setIsLoading(false);
@@ -90,14 +83,14 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
             transition={{ duration: 0.3 }}
             className="p-0 md:p-0 text-white max-w-5xl mx-auto" 
         >
-            {/* --- TOP BAR --- */}
+             
             <div className="flex items-center gap-4 text-gray-400 mb-6">
                 <button onClick={() => setPage('tools')} className="flex items-center gap-2 hover:text-white">
                     <ArrowLeft size={24} /> <span className="text-xl font-medium">Tools</span>
                 </button>
             </div>
             
-            {/* --- HEADER --- */}
+            
             <div className="flex flex-col items-center justify-center mb-10">
                 <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
                     <Wand2 size={48} className="text-purple-400" />
@@ -105,13 +98,13 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                 <h2 className="text-4xl font-bold mt-4">Magic Background Remover</h2>
             </div>
 
-            {/* --- NAYA SIDE-BY-SIDE LAYOUT (Responsive) --- */}
+             
             <div className="bg-[#1f1f3d]/50 p-4 md:p-6 flex flex-col items-center border-2 border-indigo-400/30 rounded-2xl">
                 
-                {/* --- IMAGE COMPARISON AREA --- */}
+                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
                     
-                    {/* ⬇️ 4. Original Image (This is now the drop zone) ⬇️ */}
+                    
                     <div 
                         className="flex flex-col bg-[#1a1834] rounded-lg p-4 transition-all duration-300"
                         onDragOver={handleDragOver}
@@ -139,7 +132,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                         </div>
                     </div>
 
-                    {/* 2. Processed Image */}
+                     
                     <div className="flex flex-col bg-[#1a1834] rounded-lg p-4">
                         <h3 className="text-lg font-semibold text-gray-400 mb-2 text-center">Result</h3>
                         <div className="w-full h-full min-h-[300px] md:min-h-[400px] flex items-center justify-center overflow-hidden rounded-md relative">
@@ -163,7 +156,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
                     </div>
                 </div>
 
-                {/* --- CONTROLS AREA --- */}
+                 
                 <div className="flex flex-col md:flex-row justify-center gap-4 w-full mt-8">
                     <input type="file" id="magic-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
                     <label 

@@ -3,11 +3,8 @@ import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-
 import AuthButton from '../components/AuthButton.jsx';
 import AuthPageWrapper from '../components/AuthPageWrapper.jsx';
-
-// Validation Schema for new password
 const ResetSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
@@ -16,7 +13,7 @@ const ResetSchema = z.object({
   path: ["confirmPassword"], 
 });
 
-// This component is shown by App.jsx when a token is found in the URL
+ 
 export default function ResetPasswordPage({ setPage, onResetPassword }) {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
@@ -31,12 +28,11 @@ export default function ResetPasswordPage({ setPage, onResetPassword }) {
     }
   });
 
-  // This function calls the new onResetPassword handler from App.jsx
   const onFormSubmit = (data) => {
     setIsLoading(true);
-    // onResetPassword (from App.jsx) already has the token from its state
+    
     onResetPassword(data.password).catch(() => {
-      // Handle error
+      
     }).finally(() => {
       setIsLoading(false);
     });
@@ -50,7 +46,7 @@ export default function ResetPasswordPage({ setPage, onResetPassword }) {
       </p>
       
       <form className="space-y-6" onSubmit={handleSubmit(onFormSubmit)}>
-        {/* --- Password Input --- */}
+       
         <div>
           <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
             <Lock size={20} className="text-white/50 mr-3" />
@@ -69,7 +65,7 @@ export default function ResetPasswordPage({ setPage, onResetPassword }) {
           )}
         </div>
         
-        {/* --- Confirm Password Input --- */}
+       
         <div>
           <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
             <Lock size={20} className="text-white/50 mr-3" />
