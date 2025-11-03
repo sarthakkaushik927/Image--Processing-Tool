@@ -120,7 +120,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}  
+            transition={{ duration: 0.3 }} // ⬅️ Max width badha di hai
         >
             
             <div className="flex items-center gap-4 text-gray-400 mb-6">
@@ -228,7 +228,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                     className="w-full h-2 bg-gradient-to-r from-gray-500 via-pink-400 to-red-600 rounded-lg appearance-none cursor-pointer" />
                             </div>
 
-                            {/* 4. HUE SLIDER */}
+                          
                             <div className='p-2 border-b border-gray-700'>
                                 <label className='block font-semibold mb-2 flex items-center gap-2' htmlFor="hue-slider">
                                     <Palette size={20} className='text-green-400' /> Hue Rotation: {hueValue}°
@@ -262,7 +262,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                             </div>
 
                         </div> 
-                       
+                 
                         <div className="flex flex-col gap-4 w-full justify-center mt-8">
                             <input type="file" id="adjust-upload" onChange={handleImageUpload} accept="image/*" className="hidden" />
                             <label htmlFor="adjust-upload" className="w-full px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform cursor-pointer bg-transparent border-2 border-gray-400 text-gray-300 hover:bg-gray-700/50 flex items-center justify-center gap-2">
@@ -276,7 +276,7 @@ export default function AdjustmentsWorkspace({ setPage, onImageDownloaded }) {
                                     isOutline 
                                     disabled={!imageSrc} 
                                     icon={RotateCcw} 
-                                    className="w-full"
+                                    className="w-full" 
                                 />
                                 <GradientButton 
                                     text="Download" 

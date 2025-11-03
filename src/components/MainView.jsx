@@ -16,7 +16,7 @@ export default function MainView({ setShowHelp, setPage, isAuthenticated }) {
   
   const handleGenerateClick = () => {
     if (isAuthenticated) {
-      setPage();
+      setPage('search');
     } else {
       setPage('login');
     }
@@ -36,7 +36,7 @@ export default function MainView({ setShowHelp, setPage, isAuthenticated }) {
             <GradientButton className='lg:px-20' text="Create" isOutline onClick={handleCreateClick} />
           </div>
           <GradientButton 
-            text="GenerateImage" 
+            text="SearchTools" 
             className="lg:px-57 px-33 max-w-40 lg:min-w-60 justfy-center items-center text-center flex flex-col"
             onClick={handleGenerateClick} 
           />
