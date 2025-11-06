@@ -43,14 +43,14 @@ const getInitialState = (key, defaultValue) => {
       try {
         parsedValue = JSON.parse(parsedValue);
       } catch (e) {
-        toast.error(`Error parsing ${key}: ${e.message}`);
+        
       }
     }
 
     return parsedValue;
 
   } catch (error) {
-    toast.error(`Error parsing ${key}: ${error.message}`);
+   
     return defaultValue;
   }
 };
