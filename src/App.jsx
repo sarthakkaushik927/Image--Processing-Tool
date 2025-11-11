@@ -18,7 +18,8 @@ import AuthCard from './components/AuthCard.jsx';
 import DobbyFloatingChat from "./components/DobbyFloatingChat.jsx";
 import toast, { Toaster } from 'react-hot-toast';
 
-const API_BASE_URL = 'https://image-routes-2.onrender.com';
+// const API_BASE_URL = 'https://image-routes-2.onrender.com';
+const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
 
 
 const DOWNLOAD_STORAGE_KEY = 'fotoFixDownloads';
@@ -162,7 +163,7 @@ export default function App() {
     const loadingToastId = toast.loading('Logging in...');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`${API_BASE_URL}/api/v1/auth/login`, { email, password });
 
       const token = response.data?.token || 'mock-token';
       const apiUsername = response.data?.user?.userName || response.data?.userName || response.data?.user?.username || getDisplayNameFromEmail(email);
@@ -191,7 +192,7 @@ export default function App() {
   const handleSignup = async (username, email, password) => {
     
 
-    const signupPromise = axios.post(`${API_BASE_URL}/api/auth/register`, {
+    const signupPromise = axios.post(`${API_BASE_URL}/api/v1/auth/register`, {
       userName: username,
       email,
       password,
