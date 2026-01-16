@@ -4,7 +4,7 @@ import { ArrowLeft, Search, UploadCloud, Loader2, Download, Camera, X } from 'lu
 import GradientButton from '../components/GradientButton';
 import toast from 'react-hot-toast';
 
-export const ML_SERVER = import.meta.env.VITE_ML_API || "https://34.131.30.185";
+export const ML_SERVER = import.meta.env.VITE_ML_API || "http://127.0.0.1:5000";
 
 function CameraCapture({ onCapture }) {
   const videoRef = useRef(null);

@@ -19,7 +19,7 @@ import DobbyFloatingChat from "./components/DobbyFloatingChat.jsx";
 import toast, { Toaster } from 'react-hot-toast';
 
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = "https://image-processing-app-sepia.vercel.app";
 
 const DOWNLOAD_STORAGE_KEY = 'fotoFixDownloads';
 
