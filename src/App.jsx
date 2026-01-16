@@ -18,9 +18,8 @@ import AuthCard from './components/AuthCard.jsx';
 import DobbyFloatingChat from "./components/DobbyFloatingChat.jsx";
 import toast, { Toaster } from 'react-hot-toast';
 
-// const API_BASE_URL = 'https://image-routes-2.onrender.com';
-const API_BASE_URL = 'https://image-processing-app-sepia.vercel.app';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const DOWNLOAD_STORAGE_KEY = 'fotoFixDownloads';
 
