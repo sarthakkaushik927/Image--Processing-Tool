@@ -1,18 +1,27 @@
 import React, { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
-  Wand2,
-  UploadCloud,
-  Download,
-  Loader2,
-  Image as ImageIcon,
-  CheckCircle,
+  ArrowLeft, Wand2, UploadCloud, Download, Loader2, Image as ImageIcon
 } from "lucide-react";
 import toast from 'react-hot-toast';
 
+// ✅ Import Layout Components
+import BubblesBackground from './BubblesBackground'; 
+
 export const ML_SERVER = import.meta.env.VITE_ML_API || "http://127.0.0.1:5000";
 
+// --- Helper: Convert Blob to Base64 (Crucial for DownloadsView) ---
+const blobToBase64 = (blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+// --- Reusable Button ---
 function GradientButton({
   text,
   isBlue = false,
@@ -22,36 +31,30 @@ function GradientButton({
   disabled,
   icon: Icon,
 }) {
-  const blueGradient =
-    "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500";
-  const purpleGradient =
-    "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700";
-  const outline =
-    "bg-transparent border-2 border-purple-400 text-purple-300 hover:bg-purple-900/50";
-  const buttonClasses = isOutline
-    ? outline
-    : isBlue
-      ? blueGradient
-      : purpleGradient;
-  const defaultClasses =
-    "w-full md:w-auto px-8 py-3 rounded-full font-semibold shadow-lg transition-all transform flex items-center justify-center gap-2";
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+  const blueGradient = "bg-gradient-to-r from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500 text-white border-none";
+  const purpleGradient = "bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-none";
+  const outline = "bg-transparent border border-gray-500 text-gray-300 hover:bg-gray-800/50 hover:border-gray-400 backdrop-blur-sm";
+  
+  const buttonClasses = isOutline ? outline : isBlue ? blueGradient : purpleGradient;
 
   return (
     <motion.button
-      whileHover={{ scale: disabled ? 1 : 1.05 }}
-      whileTap={{ scale: disabled ? 1 : 0.95 }}
+      whileHover={{ scale: disabled ? 1 : 1.02 }}
+      whileTap={{ scale: disabled ? 1 : 0.98 }}
       onClick={onClick}
       disabled={disabled}
-      className={`${defaultClasses} ${buttonClasses} ${className} ${disabledClasses}`}
+      className={`px-6 py-2.5 rounded-xl font-medium shadow-lg transition-all flex items-center justify-center gap-2 ${buttonClasses} ${className} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
-      {Icon && <Icon size={20} className={disabled && Icon === Loader2 ? "animate-spin" : ""} />}
+      {Icon && <Icon size={18} className={disabled && Icon === Loader2 ? "animate-spin" : ""} />}
       {text}
     </motion.button>
   );
 }
 
-export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
+export default function MagicBrushWorkspace({ onImageDownloaded }) {
+  const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  
   const [originalImage, setOriginalImage] = useState(null);
   const [processedImageURL, setProcessedImageURL] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +62,23 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
   const [fileObj, setFileObj] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const fileInputRef = useRef(null);
+  // --- Drag & Drop Handlers ---
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) processFile(file);
+  };
 
   const handleImageUpload = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -79,23 +98,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
     reader.readAsDataURL(file);
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (file) processFile(file);
-  };
-
+  // --- API Call ---
   const handleRemoveBackground = async () => {
     if (!fileObj) {
       toast.error("Please upload an image first.");
@@ -108,7 +111,7 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
     try {
       const formData = new FormData();
       formData.append("image", fileObj);
-      formData.append("_id", "anurag");
+      formData.append("_id", "anurag"); // Placeholder ID
 
       const res = await fetch(`${ML_SERVER}/remove-bg`, {
         method: "POST",
@@ -126,13 +129,13 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
         throw new Error("Failed to process image");
       }
     } catch (err) {
-      
-      toast.error("Background removal failed. Please try again.", { id: toastId });
+      toast.error("Background removal failed.", { id: toastId });
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- Download Handler ---
   const handleDownload = async () => {
     if (!processedImageURL) {
       toast.error("No image to download.");
@@ -140,152 +143,185 @@ export default function MagicBrushWorkspace({ setPage, onImageDownloaded }) {
     }
 
     const downloadName = `removed_bg_${fileName}`;
-    const toastId = toast.loading('Preparing download...');
+    const toastId = toast.loading('Downloading...');
     try {
+      // 1. Fetch the processed image
       const response = await fetch(processedImageURL, { mode: "cors" });
       const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // 2. Convert to Base64 for persistent storage
+      const base64Data = await blobToBase64(blob);
 
+      // 3. Trigger Browser Download
+      const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = downloadName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-
       window.URL.revokeObjectURL(blobUrl);
 
+      // 4. Save to App History
       if (onImageDownloaded) {
-        onImageDownloaded(processedImageURL, downloadName);
+        onImageDownloaded(base64Data, downloadName); 
       }
 
-      toast.success("Image downloaded successfully!", { id: toastId });
+      toast.success("Download complete!", { id: toastId });
     } catch (error) {
-      
-      toast.error("Download failed. Please try again.", { id: toastId });
+      console.error(error);
+      toast.error("Download failed.", { id: toastId });
     }
   };
 
   return (
-    <motion.div
-      key="magic-brush-workspace"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3 }}
-      className="p-0 md:p-0 text-white max-w-5xl mx-auto"
-    >
-      <div className="flex items-center gap-4 text-gray-400 mb-6">
-        <button
-          onClick={() => setPage("tools")}
-          className="flex items-center gap-2 hover:text-white"
-        >
-          <ArrowLeft size={24} />{" "}
-          <span className="text-xl font-medium">Tools</span>
-        </button>
-      </div>
+    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+      {/* Background */}
+      <BubblesBackground />
 
-      <div className="flex flex-col items-center justify-center mb-10">
-        <div className="bg-[#1f1f3d] p-4 rounded-full border border-purple-500 shadow-xl">
-          <Wand2 size={48} className="text-purple-400" />
-        </div>
-        <h2 className="text-4xl font-bold mt-4">Magic Background Remover</h2>
-      </div>
+      {/* Main Content */}
+      <motion.div
+        key="magic-brush-workspace"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className="relative z-10 p-6 md:p-12 max-w-7xl mx-auto h-screen flex flex-col"
+      >
+        {/* Header Section */}
+        <div className="flex-shrink-0 flex items-center justify-between mb-6">
+            <button 
+                onClick={() => navigate('/tools')} 
+                className="group flex items-center gap-2 px-4 py-2 rounded-full 
+                            bg-[#1a1a2e]/80 border border-white/10 hover:border-purple-500/50
+                            transition-all duration-300"
+            >
+                <ArrowLeft size={18} className="text-gray-400 group-hover:text-white" />
+                <span className="text-sm font-medium text-gray-400 group-hover:text-white">Back</span>
+            </button>
 
-      <div className="bg-[#1f1f3d]/50 p-4 md:p-6 flex flex-col items-center border-2 border-indigo-400/30 rounded-2xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 w-full">
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`flex flex-col bg-[#1a1834] rounded-lg p-4 border-2 transition-all ${isDragging ? "border-blue-400 bg-blue-950/30" : "border-transparent"
-              }`}
-          >
-            <h3 className="text-lg font-semibold text-gray-400 mb-2 text-center">
-              Original
-            </h3>
-            <div className="w-full h-full min-h-[300px] md:min-h-[400px] flex items-center justify-center overflow-hidden rounded-md">
-              {originalImage ? (
-                <img
-                  src={originalImage}
-                  alt="Original Input"
-                  className="max-w-full max-h-full object-contain"
-                />
-              ) : (
-                <div className="text-center text-gray-500 p-4">
-                  <ImageIcon size={64} className="mx-auto mb-3" />
-                  <p className="text-gray-400 mb-2">Drag & Drop image here</p>
-                  <p>or</p>
-                  <label
-                    htmlFor="magic-upload"
-                    className="cursor-pointer text-blue-400 hover:underline"
-                  >
-                    Click to browse
-                  </label>
-                </div>
-              )}
+            <div className="flex items-center gap-3">
+               <div className="bg-purple-900/30 p-2 rounded-lg">
+                  <Wand2 size={24} className="text-purple-400" />
+               </div>
+               <h1 className="text-2xl font-bold">Magic Background Remover</h1>
             </div>
-            <input
-              ref={fileInputRef}
-              id="magic-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </div>
+            
+            <div className="w-[88px]"></div> {/* Spacer */}
+        </div>
 
-          <div className="flex flex-col bg-[#1a1834] rounded-lg p-4 relative">
-            <h3 className="text-lg font-semibold text-gray-400 mb-2 text-center">
-              Result
-            </h3>
-            <div className="w-full h-full min-h-[300px] md:min-h-[400px] flex items-center justify-center overflow-hidden rounded-md relative">
-              {isLoading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-10 rounded-md">
-                  <Loader2
-                    size={48}
-                    className="text-purple-400 animate-spin"
-                  />
-                  <p className="ml-4 text-xl font-medium mt-4">
-                    Removing background...
-                  </p>
+        {/* --- Work Area (Split Layout) --- */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-0">
+            
+            {/* Left: Original / Upload */}
+            <div className="flex flex-col h-full bg-[#1f1f3d]/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4 ml-1">Original Image</h3>
+                
+                <div
+                    className={`flex-1 flex items-center justify-center rounded-2xl overflow-hidden relative transition-all duration-300 backdrop-blur-sm
+                        ${isDragging ? "border-2 border-dashed border-purple-500 bg-purple-900/20" : "bg-[#1a1834]/60 border border-white/10 hover:border-purple-500/30"}`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                >
+                    {originalImage ? (
+                        <img
+                            src={originalImage}
+                            alt="Original"
+                            className="max-w-full max-h-full object-contain p-4"
+                        />
+                    ) : (
+                        <div className="text-center p-8 pointer-events-none">
+                            <ImageIcon size={48} className={`mx-auto mb-4 transition-colors ${isDragging ? "text-purple-400" : "text-gray-600"}`} />
+                            <p className="text-gray-400 font-medium">
+                                {isDragging ? "Drop it here!" : "Drag & drop an image"}
+                            </p>
+                        </div>
+                    )}
                 </div>
-              )}
-              {processedImageURL ? (
-                <img
-                  src={processedImageURL}
-                  alt="Processed Output"
-                  className="max-w-full max-h-full object-contain"
-                />
-              ) : (
-                !isLoading && (
-                  <div className="text-center text-gray-500 p-4">
-                    <CheckCircle size={64} className="mx-auto" />
-                    <p className="mt-2">Result will appear here</p>
-                  </div>
-                )
-              )}
+
+                {/* Upload Controls */}
+                <div className="mt-6 flex flex-col gap-3">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
+                    
+                    <div className="flex gap-3">
+                        <GradientButton 
+                            text="Upload Image" 
+                            isOutline 
+                            icon={UploadCloud} 
+                            className="flex-1" 
+                            onClick={() => fileInputRef.current.click()} 
+                        />
+                        <GradientButton
+                            text={isLoading ? "Processing..." : "Remove BG"}
+                            onClick={handleRemoveBackground}
+                            isBlue
+                            disabled={!originalImage || isLoading}
+                            icon={isLoading ? Loader2 : Wand2}
+                            className="flex-1"
+                        />
+                    </div>
+                </div>
             </div>
-          </div>
+
+            {/* Right: Result */}
+            <div className="flex flex-col h-full bg-[#1f1f3d]/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                <h3 className="text-lg font-semibold text-gray-300 mb-4 ml-1">Result</h3>
+
+                <div className="flex-1 flex items-center justify-center rounded-2xl overflow-hidden relative border border-white/10 bg-[#1a1834]/80">
+                    
+                    {/* Checkerboard Pattern for Transparency */}
+                    <div className="absolute inset-0 opacity-20" 
+                         style={{ 
+                             backgroundImage: "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)",
+                             backgroundSize: "20px 20px",
+                             backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px" 
+                         }} 
+                    />
+
+                    {isLoading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm z-20">
+                            <Loader2 size={48} className="text-purple-400 animate-spin mb-3" />
+                            <p className="text-white font-medium animate-pulse">Working magic...</p>
+                        </div>
+                    )}
+
+                    {processedImageURL ? (
+                        <img
+                            src={processedImageURL}
+                            alt="Processed"
+                            className="relative z-10 max-w-full max-h-full object-contain p-4"
+                        />
+                    ) : (
+                        !isLoading && (
+                            <div className="relative z-10 text-center text-gray-500 opacity-50">
+                                <Wand2 size={48} className="mx-auto mb-2" />
+                                <p>Processed image will appear here</p>
+                            </div>
+                        )
+                    )}
+                </div>
+
+                <div className="mt-6">
+                    <GradientButton
+                        text="Download Result"
+                        onClick={handleDownload}
+                        disabled={!processedImageURL || isLoading}
+                        icon={Download}
+                        className="w-full"
+                    />
+                </div>
+            </div>
+
         </div>
 
-        <div className="flex flex-col md:flex-row justify-center gap-4 w-full mt-8">
-          <GradientButton
-            text={isLoading ? "Processing..." : "Remove Background"}
-            onClick={handleRemoveBackground}
-            isBlue
-            disabled={!originalImage || isLoading}
-            icon={isLoading ? Loader2 : Wand2}
-          />
-
-          <GradientButton
-            text="Download Result"
-            onClick={handleDownload}
-            disabled={!processedImageURL || isLoading}
-            icon={Download}
-          CVs          />
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

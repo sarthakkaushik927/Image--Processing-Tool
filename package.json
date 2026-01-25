@@ -9,10 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@hookform/resolvers": "^5.2.2",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.12.2",
-    "framer-motion": "^12.23.24",
+    "framer-motion": "^12.29.0",
     "js-cookie": "^3.0.5",
     "localforage": "^1.10.0",
     "lucide-react": "^0.548.0",
@@ -23,6 +26,7 @@
     "react-image-crop": "^11.0.10",
     "react-router-dom": "^7.13.0",
     "tailwindcss": "^4.1.16",
+    "three": "^0.182.0",
     "zod": "^4.1.12"
   },
   "devDependencies": {

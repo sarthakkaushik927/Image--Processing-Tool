@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Search, LogOut, Home, Download, UserCircle, 
   Menu, X, LogIn, LayoutGrid 
+  // Wand2 was removed since "Tools" is gone
 } from 'lucide-react';
 import GradientButton from './GradientButton'; 
 
@@ -26,12 +27,12 @@ export default function HeaderNav({ isAuthenticated, onLogout, profileImage }) {
     navigate('/login');
   };
 
+  // ✅ Updated Links Array (Removed "Tools")
   const navLinks = [
-    { name: "Home", path: "/", icon: <Home size={18} /> },
+    { name: "Home", path: "/dashboard", icon: <Home size={18} /> },
     { name: "Discover", path: "/discover", icon: <LayoutGrid size={18} /> }, 
     { name: "Downloads", path: "/downloads", icon: <Download size={18} /> },
     { name: "Account", path: "/account", icon: <UserCircle size={18} /> },
-    { name: "Search", path: "/search", icon: <Search size={18} /> }
   ];
 
   return (
@@ -77,7 +78,7 @@ export default function HeaderNav({ isAuthenticated, onLogout, profileImage }) {
                   <LogOut size={20} />
                 </motion.button>
                 
-                <Link to="/profile">
+                <Link to="/account">
                   <motion.img
                     whileHover={{ 
                       scale: 1.05, 

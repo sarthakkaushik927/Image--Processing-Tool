@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Crop, Repeat, Wand2, FileText, 
-  Search, Sun 
+  Search, Sun, FileType // <--- Added FileType import
 } from 'lucide-react';
 
 export const toolsData = [
@@ -23,7 +23,8 @@ export const toolsData = [
     title: 'Converter',
     description: 'Convert to JPG, PNG, WEBP.',
     page: 'format-converter',
-    icon: <Repeat size={32} />,
+    // ✅ Updated to FileType icon so it looks different from Angle Slider
+    icon: <FileType size={32} />, 
     type: 'standard'
   },
   {

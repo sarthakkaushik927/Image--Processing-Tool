@@ -1,11 +1,34 @@
 import React, { useState } from 'react';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, ArrowLeft, Wand2, UserPlus, Check } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom'; // Import Link
-import AuthButton from '../components/AuthButton';
-import AuthPageWrapper from '../components/AuthPageWrapper';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+// --- Particle Component ---
+const Particle = ({ delay, duration, xStart, yStart, size }) => (
+  <motion.div
+    initial={{ x: xStart, y: yStart, opacity: 0 }}
+    animate={{ 
+      y: [yStart, yStart - 100, yStart], 
+      x: [xStart, xStart + 50, xStart],
+      opacity: [0, 0.5, 0] 
+    }}
+    transition={{ 
+      duration: duration, 
+      repeat: Infinity, 
+      delay: delay,
+      ease: "easeInOut"
+    }}
+    className="absolute rounded-full bg-purple-500 blur-xl"
+    style={{ 
+      width: size, 
+      height: size, 
+      zIndex: 0 
+    }}
+  />
+);
 
 const SignupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -20,7 +43,8 @@ const SignupSchema = z.object({
   path: ["confirmPass"], 
 });
 
-export default function SignupPage({ onSignup }) { // Removed setPage prop
+export default function SignupPage({ onSignup }) {
+  const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,121 +61,194 @@ export default function SignupPage({ onSignup }) { // Removed setPage prop
     }
   });
 
-  const onFormSubmit = (data) => {
+  const onFormSubmit = async (data) => {
     setIsLoading(true);
-    onSignup(data.username, data.email, data.password)
-      .catch(() => {})
-      .finally(() => {
+    try {
+        await onSignup(data.username, data.email, data.password);
+    } catch (e) {
+        // Error handling typically in parent via toast
+    } finally {
         setIsLoading(false);
-      });
+    }
   };
 
   return (
-    <AuthPageWrapper>
-      <h2 className="text-3xl font-bold text-white mb-4">Create an account</h2>
+    <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden py-10">
       
-      <div className="flex items-center space-x-2 my-6">
-        <div className="flex-1 h-px bg-gray-700"></div>
-        <span className="text-gray-500 text-sm">or</span>
-        <div className="flex-1 h-px bg-gray-700"></div>
+      {/* --- Background Particles --- */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <Particle delay={0} duration={8} xStart={-50} yStart={100} size={100} />
+        <Particle delay={2} duration={12} xStart={200} yStart={400} size={60} />
+        <Particle delay={1} duration={10} xStart={-100} yStart={500} size={80} />
+        <Particle delay={4} duration={15} xStart={300} yStart={100} size={120} />
+        <Particle delay={3} duration={9} xStart={100} yStart={-50} size={50} />
       </div>
-      
-      <form className="space-y-5" onSubmit={handleSubmit(onFormSubmit)}>
-        <div>
-          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
-            <User size={20} className="text-white/50 mr-3" />
-            <input 
-              type="text" 
-              placeholder="Username"
-              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
-              {...register("username")}  
-            />
-          </div>
-          {errors.username && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.username.message}</p>
-          )}
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ duration: 0.5 }}
+        // ✅ Removed background, border, and shadow classes
+        className="w-full max-w-md p-8 relative z-10"
+      >
+        {/* Back Button */}
+        <button 
+            onClick={() => navigate('/')} 
+            className="absolute -top-12 left-0 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+        >
+            <ArrowLeft size={18} />
+            <span className="text-sm font-medium">Back to Home</span>
+        </button>
+
+        {/* Clickable Logo */}
+        <div 
+            className="flex justify-center mb-6 cursor-pointer group"
+            onClick={() => navigate('/')}
+        >
+            <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
+                <Wand2 size={32} className="text-white" />
+            </div>
         </div>
 
-        <div>
-          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
-            <Mail size={20} className="text-white/50 mr-3" />
-            <input 
-              type="email" 
-              placeholder="Email"
-              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
-              {...register("email")} 
-            />
-          </div>
-          {errors.email && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
-            <Lock size={20} className="text-white/50 mr-3" />
-            <input 
-              type={showPass ? "text" : "password"}
-              placeholder="Enter Your Password"
-              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
-              {...register("password")} 
-            />
-            <button type="button" onClick={() => setShowPass(!showPass)} className="focus:outline-none text-white/50">
-              {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.password.message}</p>
-          )}
-        </div>
+        <h2 className="text-3xl font-bold text-center text-white mb-2">Join FotoFix</h2>
+        <p className="text-center text-gray-400 mb-8">Create an account to unleash your creativity</p>
         
-        <div>
-          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
-            <Lock size={20} className="text-white/50 mr-3" />
-            <input 
-              type={showConfirmPass ? "text" : "password"}
-              placeholder="Confirm Password"
-              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
-              {...register("confirmPass")} 
-            />
-            <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="focus:outline-none text-white/50">
-              {showConfirmPass ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
+        <form className="space-y-4" onSubmit={handleSubmit(onFormSubmit)}>
+          
+          {/* Username */}
+          <div className="space-y-1">
+            <div className={`
+              group flex items-center bg-[#15152a] border border-white/10 
+              rounded-xl px-4 py-3.5 transition-all duration-300
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
+              ${errors.username ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
+            `}>
+              <User size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <input 
+                type="text" 
+                placeholder="Username"
+                className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
+                {...register("username")} 
+              />
+            </div>
+            {errors.username && (
+              <p className="text-red-400 text-xs ml-1">{errors.username.message}</p>
+            )}
           </div>
-          {errors.confirmPass && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.confirmPass.message}</p>
-          )}
-        </div>
 
-        <div>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="terms"
-              className="w-4 h-4 rounded bg-gray-800 border-gray-700 focus:ring-purple-500 text-purple-600"
-              {...register("terms")}
-            />
-            <label htmlFor="terms" className="text-sm text-white/70">
-              I agree with the <a href="#" className="font-bold text-white hover:underline">Terms & Conditions</a>
+          {/* Email */}
+          <div className="space-y-1">
+            <div className={`
+              group flex items-center bg-[#15152a] border border-white/10 
+              rounded-xl px-4 py-3.5 transition-all duration-300
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
+              ${errors.email ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
+            `}>
+              <Mail size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <input 
+                type="email" 
+                placeholder="Email Address"
+                className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
+                {...register("email")} 
+              />
+            </div>
+            {errors.email && (
+              <p className="text-red-400 text-xs ml-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          {/* Password */}
+          <div className="space-y-1">
+            <div className={`
+              group flex items-center bg-[#15152a] border border-white/10 
+              rounded-xl px-4 py-3.5 transition-all duration-300
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
+              ${errors.password ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
+            `}>
+              <Lock size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <input 
+                type={showPass ? "text" : "password"}
+                placeholder="Password"
+                className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
+                {...register("password")} 
+              />
+              <button type="button" onClick={() => setShowPass(!showPass)} className="text-gray-500 hover:text-white transition-colors">
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-red-400 text-xs ml-1">{errors.password.message}</p>
+            )}
+          </div>
+          
+          {/* Confirm Password */}
+          <div className="space-y-1">
+            <div className={`
+              group flex items-center bg-[#15152a] border border-white/10 
+              rounded-xl px-4 py-3.5 transition-all duration-300
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
+              ${errors.confirmPass ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
+            `}>
+              <Lock size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <input 
+                type={showConfirmPass ? "text" : "password"}
+                placeholder="Confirm Password"
+                className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
+                {...register("confirmPass")} 
+              />
+              <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="text-gray-500 hover:text-white transition-colors">
+                {showConfirmPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.confirmPass && (
+              <p className="text-red-400 text-xs ml-1">{errors.confirmPass.message}</p>
+            )}
+          </div>
+
+          {/* Terms Checkbox */}
+          <div className="flex items-start space-x-3 pt-2">
+            <div className="relative flex items-center h-5">
+                <input
+                type="checkbox"
+                id="terms"
+                className="peer h-4 w-4 rounded border-gray-600 bg-[#15152a] text-purple-600 focus:ring-purple-500/50 focus:ring-offset-0 transition-all cursor-pointer appearance-none checked:bg-purple-600 border-2"
+                {...register("terms")}
+                />
+                <Check size={12} className="absolute left-[2px] top-[2px] text-white opacity-0 peer-checked:opacity-100 pointer-events-none" />
+            </div>
+            <label htmlFor="terms" className="text-xs text-gray-400">
+                I agree with the <a href="#" className="font-bold text-white hover:text-purple-400 transition-colors underline decoration-purple-500/50 hover:decoration-purple-500">Terms & Conditions</a>
             </label>
           </div>
           {errors.terms && (
-            <p className="text-red-400 text-xs mt-1 ml-2">{errors.terms.message}</p>
+            <p className="text-red-400 text-xs ml-1">{errors.terms.message}</p>
           )}
-        </div>
 
-        <AuthButton text="Continue" isLoading={isLoading} isGradient={true} type="submit" />
-
-        <p className="text-center text-sm text-white/70">
-          Already have an account?{' '}
-          <Link
-            to="/login"
-            className="font-bold text-white hover:underline focus:outline-none"
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Login
-          </Link>
-        </p>
-      </form>
-    </AuthPageWrapper>
+            {isLoading ? (
+                "Creating Account..."
+            ) : (
+                <>
+                    <UserPlus size={20} /> Create Account
+                </>
+            )}
+          </button>
+
+          <p className="text-center text-sm text-gray-400 mt-4">
+            Already have an account?{' '}
+            <Link
+              to="/login"
+              className="font-bold text-white hover:text-purple-400 transition-colors"
+            >
+              Login
+            </Link>
+          </p>
+        </form>
+      </motion.div>
+    </div>
   );
 }

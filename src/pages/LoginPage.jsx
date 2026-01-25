@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, Wand2, LogIn } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-import AuthButton from '../components/AuthButton';
-import AuthPageWrapper from '../components/AuthPageWrapper';
-
 // --- Particle Component ---
-// Simple floating glowing orbs that move in the background
 const Particle = ({ delay, duration, xStart, yStart, size }) => (
   <motion.div
     initial={{ x: xStart, y: yStart, opacity: 0 }}
@@ -29,7 +25,7 @@ const Particle = ({ delay, duration, xStart, yStart, size }) => (
     style={{ 
       width: size, 
       height: size, 
-      zIndex: 0 // Behind the form
+      zIndex: 0 
     }}
   />
 );
@@ -40,6 +36,7 @@ const LoginSchema = z.object({
 });
 
 export default function LoginPage({ onLogin }) {
+  const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -49,17 +46,21 @@ export default function LoginPage({ onLogin }) {
     defaultValues: { email: "", password: "" }
   });
 
-  const onFormSubmit = (data) => {
+  const onFormSubmit = async (data) => {
     setIsLoading(true);
-    onLogin(data.email, data.password)
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
+    try {
+        await onLogin(data.email, data.password);
+    } catch (error) {
+        // Error handling typically in parent via toast
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   return (
-    <AuthPageWrapper>
+    <div className="min-h-screen flex items-center justify-center bg-black relative overflow-hidden py-10">
+      
       {/* --- Background Particles --- */}
-      {/* We place them absolute so they float behind the glass card */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <Particle delay={0} duration={8} xStart={-50} yStart={100} size={100} />
         <Particle delay={2} duration={12} xStart={200} yStart={400} size={60} />
@@ -72,11 +73,31 @@ export default function LoginPage({ onLogin }) {
         initial={{ opacity: 0, scale: 0.95 }} 
         animate={{ opacity: 1, scale: 1 }} 
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md mx-auto relative z-10" // z-10 ensures form is above particles
+        // ✅ Seamless integration: Removed background card styles
+        className="w-full max-w-md p-8 relative z-10"
       >
+        {/* Back Button */}
+        <button 
+            onClick={() => navigate('/')} 
+            className="absolute -top-12 left-0 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+        >
+            <ArrowLeft size={18} />
+            <span className="text-sm font-medium">Back to Home</span>
+        </button>
+
+        {/* Clickable Logo */}
+        <div 
+            className="flex justify-center mb-6 cursor-pointer group"
+            onClick={() => navigate('/')}
+        >
+            <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
+                <Wand2 size={32} className="text-white" />
+            </div>
+        </div>
+
         {/* Header Section */}
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+          <h2 className="text-3xl font-extrabold text-white mb-2">
             Welcome Back
           </h2>
           <p className="text-gray-400 text-sm">
@@ -89,17 +110,16 @@ export default function LoginPage({ onLogin }) {
           
           {/* Email Input */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-300 ml-1 uppercase tracking-wider">Email Address</label>
             <div className={`
-              group flex items-center bg-[#13131f]/80 backdrop-blur-md border border-gray-700/50 
+              group flex items-center bg-[#15152a] border border-white/10 
               rounded-xl px-4 py-3.5 transition-all duration-300
-              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:bg-[#1a1a2e]
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
               ${errors.email ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
             `}>
               <Mail size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
               <input 
                 type="email" 
-                placeholder="name@example.com"
+                placeholder="Email Address"
                 className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
                 {...register("email")} 
               />
@@ -111,25 +131,16 @@ export default function LoginPage({ onLogin }) {
 
           {/* Password Input */}
           <div className="space-y-1">
-            <div className="flex justify-between items-center ml-1">
-              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Password</label>
-              <Link 
-                to="/forgot-password"
-                className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-              >
-                Forgot Password?
-              </Link>
-            </div>
             <div className={`
-              group flex items-center bg-[#13131f]/80 backdrop-blur-md border border-gray-700/50 
+              group flex items-center bg-[#15152a] border border-white/10 
               rounded-xl px-4 py-3.5 transition-all duration-300
-              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:bg-[#1a1a2e]
+              focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20
               ${errors.password ? 'border-red-500/50 ring-2 ring-red-500/10' : 'hover:border-gray-600'}
             `}>
               <Lock size={18} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
               <input 
                 type={showPass ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="Password"
                 className="bg-transparent w-full ml-3 text-white placeholder-gray-600 focus:outline-none text-sm font-medium"
                 {...register("password")}  
               />
@@ -144,17 +155,32 @@ export default function LoginPage({ onLogin }) {
             {errors.password && (
               <p className="text-red-400 text-xs ml-1 mt-1">{errors.password.message}</p>
             )}
+            
+            <div className="flex justify-end pt-1">
+                <Link 
+                    to="/forgot-password"
+                    className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                    Forgot Password?
+                </Link>
+            </div>
           </div>
 
           {/* Submit Button */}
           <div className="pt-2">
-            <AuthButton 
-              text="Sign In" 
-              isLoading={isLoading} 
-              isGradient={true} 
-              type="submit" 
-              iconAfter={!isLoading && <ArrowRight size={18} />}
-            />
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3.5 rounded-xl hover:shadow-[0_0_20px_rgba(124,58,237,0.4)] transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {isLoading ? (
+                    "Signing In..."
+                ) : (
+                    <>
+                        <LogIn size={20} /> Sign In
+                    </>
+                )}
+            </button>
           </div>
 
           {/* Sign Up Link */}
@@ -170,6 +196,6 @@ export default function LoginPage({ onLogin }) {
 
         </form>
       </motion.div>
-    </AuthPageWrapper>
+    </div>
   );
 }
