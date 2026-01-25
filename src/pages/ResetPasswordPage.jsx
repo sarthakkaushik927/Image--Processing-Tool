@@ -1,58 +1,95 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Lock, ArrowLeft } from 'lucide-react';
-import AuthInput from '../components/AuthInput.jsx';
+import { Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Link } from 'react-router-dom'; // Import Link
 import AuthButton from '../components/AuthButton.jsx';
 import AuthPageWrapper from '../components/AuthPageWrapper.jsx';
 
+const ResetSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"], 
+});
 
-export default function ResetPasswordPage({ setPage, onResetPassword }) {
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function ResetPasswordPage({ onResetPassword }) { // Removed setPage prop
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(ResetSchema),
+    mode: 'onChange',
+    defaultValues: {
+      password: "",
+      confirmPassword: ""
     }
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters long.");
-      return;
-    }
+  });
+
+  const onFormSubmit = (data) => {
     setIsLoading(true);
-   
-    onResetPassword(password).finally(() => setIsLoading(false));
+    onResetPassword(data.password)
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   return (
     <AuthPageWrapper>
-      <button 
-        onClick={() => setPage('login')} // Go back to login
+      <Link 
+        to="/login" 
         className="flex items-center gap-2 text-white/70 hover:text-white mb-4 focus:outline-none"
       >
         <ArrowLeft size={18} /> Back to Login
-      </button>
+      </Link>
+
       <h2 className="text-3xl font-bold text-white">Set New Password</h2>
       <p className="text-white/70 mt-2 mb-8">
         Please enter your new password below.
       </p>
       
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <AuthInput 
-          type="password" 
-          placeholder="New Password" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <AuthInput 
-          type="password" 
-          placeholder="Confirm New Password" 
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-        <AuthButton text="Reset Password" isLoading={isLoading} isGradient={true} />
+      <form className="space-y-6" onSubmit={handleSubmit(onFormSubmit)}>
+        <div>
+          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
+            <Lock size={20} className="text-white/50 mr-3" />
+            <input 
+              type={showPass ? "text" : "password"}
+              placeholder="New Password"
+              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
+              {...register("password")}
+            />
+            <button type="button" onClick={() => setShowPass(!showPass)} className="focus:outline-none text-white/50">
+              {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="text-red-400 text-xs mt-1 ml-2">{errors.password.message}</p>
+          )}
+        </div>
+        
+        <div>
+          <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
+            <Lock size={20} className="text-white/50 mr-3" />
+            <input 
+              type={showConfirmPass ? "text" : "password"}
+              placeholder="Confirm New Password"
+              className="bg-transparent w-full text-white placeholder-white/50 focus:outline-none"
+              {...register("confirmPassword")}
+            />
+            <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="focus:outline-none text-white/50">
+              {showConfirmPass ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-red-400 text-xs mt-1 ml-2">{errors.confirmPassword.message}</p>
+          )}
+        </div>
+
+        <AuthButton text="Reset Password" isLoading={isLoading} isGradient={true} type="submit" />
       </form>
     </AuthPageWrapper>
   );

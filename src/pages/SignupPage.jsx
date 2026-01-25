@@ -3,9 +3,9 @@ import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Link } from 'react-router-dom'; // Import Link
 import AuthButton from '../components/AuthButton';
 import AuthPageWrapper from '../components/AuthPageWrapper';
-
 
 const SignupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -16,17 +16,15 @@ const SignupSchema = z.object({
     message: "You must agree to the terms",
   }),
 }).refine(data => data.password === data.confirmPass, {
-
   message: "Passwords don't match",
   path: ["confirmPass"], 
 });
 
-export default function SignupPage({ setPage, onSignup }) {
+export default function SignupPage({ onSignup }) { // Removed setPage prop
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(SignupSchema),
     mode: 'onChange', 
@@ -39,14 +37,10 @@ export default function SignupPage({ setPage, onSignup }) {
     }
   });
 
- 
   const onFormSubmit = (data) => {
     setIsLoading(true);
-  
     onSignup(data.username, data.email, data.password)
-      .catch(() => {
-        
-      })
+      .catch(() => {})
       .finally(() => {
         setIsLoading(false);
       });
@@ -56,29 +50,13 @@ export default function SignupPage({ setPage, onSignup }) {
     <AuthPageWrapper>
       <h2 className="text-3xl font-bold text-white mb-4">Create an account</h2>
       
-       
-      {/* <AuthButton
-        text="Sign in with Google"
-        icon={
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"
-            alt="Google"
-            className="w-5 h-5"
-          />
-        }
-        isSecondary={true}
-        onClick={() => console.log("Google Sign-in clicked")} 
-      /> */}
       <div className="flex items-center space-x-2 my-6">
         <div className="flex-1 h-px bg-gray-700"></div>
         <span className="text-gray-500 text-sm">or</span>
         <div className="flex-1 h-px bg-gray-700"></div>
       </div>
       
-       
       <form className="space-y-5" onSubmit={handleSubmit(onFormSubmit)}>
-
-         
         <div>
           <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
             <User size={20} className="text-white/50 mr-3" />
@@ -89,13 +67,11 @@ export default function SignupPage({ setPage, onSignup }) {
               {...register("username")}  
             />
           </div>
-           
           {errors.username && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.username.message}</p>
           )}
         </div>
 
-        
         <div>
           <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
             <Mail size={20} className="text-white/50 mr-3" />
@@ -106,13 +82,11 @@ export default function SignupPage({ setPage, onSignup }) {
               {...register("email")} 
             />
           </div>
-         
           {errors.email && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.email.message}</p>
           )}
         </div>
 
-        
         <div>
           <div className="flex items-center bg-gray-900/50 border-2 border-gray-700 rounded-lg px-4 py-3 focus-within:border-purple-500">
             <Lock size={20} className="text-white/50 mr-3" />
@@ -126,7 +100,6 @@ export default function SignupPage({ setPage, onSignup }) {
               {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          
           {errors.password && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.password.message}</p>
           )}
@@ -145,14 +118,11 @@ export default function SignupPage({ setPage, onSignup }) {
               {showConfirmPass ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-         
           {errors.confirmPass && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.confirmPass.message}</p>
           )}
         </div>
-        
 
-       
         <div>
           <div className="flex items-center space-x-2">
             <input
@@ -165,7 +135,6 @@ export default function SignupPage({ setPage, onSignup }) {
               I agree with the <a href="#" className="font-bold text-white hover:underline">Terms & Conditions</a>
             </label>
           </div>
-          
           {errors.terms && (
             <p className="text-red-400 text-xs mt-1 ml-2">{errors.terms.message}</p>
           )}
@@ -175,20 +144,14 @@ export default function SignupPage({ setPage, onSignup }) {
 
         <p className="text-center text-sm text-white/70">
           Already have an account?{' '}
-          <button
-            disabled={isLoading}
-            type="button"
-            onClick={() => setPage('login')}
+          <Link
+            to="/login"
             className="font-bold text-white hover:underline focus:outline-none"
           >
             Login
-          </button>
+          </Link>
         </p>
       </form>
     </AuthPageWrapper>
   );
 }
-
-
-
-

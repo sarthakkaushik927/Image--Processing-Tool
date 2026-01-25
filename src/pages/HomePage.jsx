@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import localforage from 'localforage';
+import toast from 'react-hot-toast';
+
+// Component Imports
 import CropWorkspace from '../components/CropWorkspace';
 import TextExtractorWorkspace from '../components/TextExtractorWorkspace';
 import FindObjectWorkspace from '../components/FindObjectWorkspace';
@@ -20,9 +24,8 @@ import HelpView from '../components/HelpView';
 import ProfileView from '../components/ProfileView';
 import DownloadsView from '../components/DownloadsView';
 import SearchView from '../components/SearchView';
-import LoginView from '../components/LoginView';
-import toast from 'react-hot-toast';
-
+import DobbyIntro from '../components/DobbyIntro'; 
+import DobbyChat from '../components/DobbyChat';
 
 localforage.config({
   name: 'FotoFixDB',
@@ -30,19 +33,43 @@ localforage.config({
 });
 
 export default function HomePage({
-  isAuthenticated, onLogin, onLogout,
-  setPage, page,
-  username, setUsername,
-  profileImage, setProfileImage,
+  isAuthenticated, 
+  onLogin, 
+  onLogout,
+  username, 
+  setUsername,
+  profileImage, 
+  setProfileImage,
   userEmail,
   onSaveDownload
 }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [showHelp, setShowHelp] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [downloadedImages, setDownloadedImages] = useState([]);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
 
+  // ✅ LOGIC UPDATE: Check session storage to see if we already showed the splash
+  const [showSplash, setShowSplash] = useState(() => {
+    const hasSeen = sessionStorage.getItem('has_seen_splash');
+    return !hasSeen; // If hasSeen is null/false, return true (show splash)
+  });
 
+  // --- Compatibility Helper ---
+  const setPage = (path) => {
+    if (!path) {
+      navigate('/');
+    } else if (path === 'login') {
+      navigate('/login');
+    } else if (path === 'home') {
+      navigate('/');
+    } else {
+      navigate(path.startsWith('/') ? path : `/${path}`);
+    }
+  };
+
+  // --- LocalForage Logic ---
   useEffect(() => {
     const loadImagesFromStorage = async () => {
       try {
@@ -59,15 +86,11 @@ export default function HomePage({
     loadImagesFromStorage();
   }, []);
 
-
   useEffect(() => {
     if (isStorageLoaded) {
-      localforage.setItem('fotofix-downloads', downloadedImages).catch(err => {
-        
-      });
+      localforage.setItem('fotofix-downloads', downloadedImages).catch(err => {});
     }
   }, [downloadedImages, isStorageLoaded]);
-
 
   const handleImageDownload = (imageUrl, name = 'edited-image.png') => {
     const newImage = { id: Date.now(), url: imageUrl, name: name };
@@ -80,33 +103,30 @@ export default function HomePage({
     }
   };
 
-
   const handleDeleteImage = (idToDelete) => {
-    setDownloadedImages(prevImages =>
-      prevImages.filter(image => image.id !== idToDelete)
-    );
+    setDownloadedImages(prevImages => prevImages.filter(image => image.id !== idToDelete));
   };
-
 
   const handleDeleteAllImages = () => {
     setDownloadedImages([]);
   };
 
+  // --- Splash Screen Logic ---
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [isAuthenticated]);
-
-
-  useEffect(() => {
-    if (page !== null) {
-      setShowHelp(false);
+    if (showSplash) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+        // ✅ Save to session storage so it doesn't show again until tab close/logout
+        sessionStorage.setItem('has_seen_splash', 'true');
+      }, 2000);
+      return () => clearTimeout(timer);
     }
-  }, [page]);
+  }, [showSplash]);
 
-
+  // Turn off help when location changes
+  useEffect(() => {
+    setShowHelp(false);
+  }, [location.pathname]);
 
   if (showSplash) {
     return <SplashPage />;
@@ -120,122 +140,76 @@ export default function HomePage({
       exit={{ opacity: 0 }}
     >
       <BubblesBackground />
+      
       <HeaderNav
         isAuthenticated={isAuthenticated}
         onLogout={onLogout}
-        setPage={setPage}
-        page={page}
         profileImage={profileImage}
       />
 
       <main className="flex-1 p-6 md:p-10 relative z-10 w-full overflow-y-auto pt-24">
-
         <div className="mt-10 md:mt-20">
           <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              
+              <Route index element={
+                showHelp ? (
+                  <HelpView setShowHelp={setShowHelp} />
+                ) : (
+                  <MainView
+                    setShowHelp={setShowHelp}
+                    setPage={setPage}
+                    isAuthenticated={isAuthenticated}
+                  />
+                )
+              } />
 
-            {page === 'login' ? (
-              <LoginView
-                key="login"
-                setPage={setPage}
-                onLogin={onLogin}
-              />
-            ) : page === 'discover' ? (
-              <DiscoverView
-                key="discover"
-                setPage={setPage}
-              />
-            ) : isAuthenticated && page === 'profile' ? (
-              <ProfileView
-                key="profile"
-                setPage={setPage}
-                username={username}
-                setUsername={setUsername}
-                profileImage={profileImage}
-                setProfileImage={setProfileImage}
-              />
-            ) : page === 'about' ? (
-              <AboutUsView key="about" setPage={setPage} />
-            ) : page === 'dobby-intro' ? (
-              <DobbyIntro key="dobby-intro" setPage={setPage} />
-            ) : page === 'dobby-chat' ? (
-              <DobbyChat key="dobby-chat" setPage={setPage} />
+              <Route path="discover" element={<DiscoverView setPage={setPage} />} />
+              <Route path="search" element={<SearchView setPage={setPage} />} />
+              <Route path="about" element={<AboutUsView setPage={setPage} />} />
+              <Route path="dobby-intro" element={<DobbyIntro setPage={setPage} />} />
+              <Route path="dobby-chat" element={<DobbyChat setPage={setPage} />} />
 
-            ) : isAuthenticated && page === 'account' ? (
-              <AccountPage
-                key="account"
-                onLogout={onLogout}
-                setPage={setPage}
-                username={username}
-                userEmail={userEmail}
-              />
-            ) : isAuthenticated && page === 'downloads' ? (
-              <DownloadsView
-                key="downloads"
-                setPage={setPage}
-                images={downloadedImages}
-                onDeleteImage={handleDeleteImage}
-                onDeleteAll={handleDeleteAllImages}
-              />
-            ) : page === 'search' ? (
-              <SearchView key="search" setPage={setPage} />
+              <Route path="profile" element={
+                <ProfileView
+                  setPage={setPage}
+                  username={username}
+                  setUsername={setUsername}
+                  profileImage={profileImage}
+                  setProfileImage={setProfileImage}
+                />
+              } />
+              
+              <Route path="account" element={
+                <AccountPage
+                  onLogout={onLogout}
+                  setPage={setPage}
+                  username={username}
+                  userEmail={userEmail}
+                />
+              } />
+              
+              <Route path="downloads" element={
+                <DownloadsView
+                  setPage={setPage}
+                  images={downloadedImages}
+                  onDeleteImage={handleDeleteImage}
+                  onDeleteAll={handleDeleteAllImages}
+                />
+              } />
 
-            ) : isAuthenticated && page === 'tools' ? (
-              <ToolsView key="tools" setPage={setPage} />
+              <Route path="tools" element={<ToolsView setPage={setPage} />} />
+              <Route path="crop" element={<CropWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="text-extractor" element={<TextExtractorWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="find-object" element={<FindObjectWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="magic-brush" element={<MagicBrushWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="format-converter" element={<FormatConverterWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="adjustments" element={<AdjustmentsWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
+              <Route path="angle-slider" element={<AngleSliderWorkspace setPage={setPage} onImageDownloaded={handleImageDownload} />} />
 
-            ) : isAuthenticated && page === 'crop' ? (
-              <CropWorkspace
-                key="crop"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'text-extractor' ? ( 
-              <TextExtractorWorkspace
-                key="text-extractor"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'find-object' ? (
-              <FindObjectWorkspace
-                key="find-object"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'magic-brush' ? (
-              <MagicBrushWorkspace
-                key="magic-brush"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'format-converter' ? (
-              <FormatConverterWorkspace
-                key="format-converter"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'adjustments' ? (
-              <AdjustmentsWorkspace
-                key="adjustments"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
-            ) : isAuthenticated && page === 'angle-slider' ? (
-              <AngleSliderWorkspace
-                key="angle-slider"
-                setPage={setPage}
-                onImageDownloaded={handleImageDownload}
-              />
+              <Route path="*" element={<Navigate to="/" />} />
 
-            ) : showHelp ? (
-              <HelpView key="help" setShowHelp={setShowHelp} />
-
-            ) : (
-              <MainView
-                key="main"
-                setShowHelp={setShowHelp}
-                setPage={setPage}
-                isAuthenticated={isAuthenticated}
-              />
-            )}
+            </Routes>
           </AnimatePresence>
         </div>
       </main>

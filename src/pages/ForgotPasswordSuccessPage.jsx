@@ -1,11 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MailCheck, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom'; // 1. Import this
 import AuthButton from '../components/AuthButton';
 import AuthPageWrapper from '../components/AuthPageWrapper';
 
+export default function ForgotPasswordSuccessPage() { // 2. Remove { setPage } prop
+  const navigate = useNavigate(); // 3. Initialize the hook
 
-export default function ForgotPasswordSuccessPage({ setPage }) {
   return (
     <AuthPageWrapper>
       <div className="flex flex-col items-center text-center py-12">
@@ -24,7 +26,7 @@ export default function ForgotPasswordSuccessPage({ setPage }) {
         
         <AuthButton 
           text="Back to Login" 
-          onClick={() => setPage('login')}
+          onClick={() => navigate('/login')} // 4. Use navigate instead of setPage
           iconAfter={<ArrowRight size={18} />}
           isGradient={true}
         />
@@ -32,4 +34,3 @@ export default function ForgotPasswordSuccessPage({ setPage }) {
     </AuthPageWrapper>
   );
 }
-
