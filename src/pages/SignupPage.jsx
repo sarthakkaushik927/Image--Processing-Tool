@@ -93,7 +93,7 @@ export default function SignupPage({ onSignup }) {
       >
         {/* Back Button */}
         <button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigate('/dashboard')} 
             className="absolute -top-12 left-0 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
         >
             <ArrowLeft size={18} />

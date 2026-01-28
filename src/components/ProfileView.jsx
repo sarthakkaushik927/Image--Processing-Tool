@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Edit2 } from 'lucide-react';
 import GradientButton from './GradientButton';
+import { useNavigate } from 'react-router-dom';
  
 export default function ProfileView({ setPage, username, setUsername, profileImage, setProfileImage }) {
   const [nickname, setNickname] = useState(username);
   const [localProfileImage, setLocalProfileImage] = useState(profileImage);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleImageUploadClick = () => {
     fileInputRef.current.click();
@@ -19,11 +21,11 @@ export default function ProfileView({ setPage, username, setUsername, profileIma
       setLocalProfileImage(newImageUrl);
     }
   };
-
+  
   const handleSave = () => {
     setUsername(nickname);
     setProfileImage(localProfileImage);
-    setPage(null);  
+    
   };
 
   return (
@@ -35,8 +37,8 @@ export default function ProfileView({ setPage, username, setUsername, profileIma
       transition={{ duration: 0.3 }}
       className="p-0 md:p-0 text-white"
     >
-      <button onClick={() => setPage(null)} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
-        <ArrowLeft size={18} /> Back to Home
+      <button onClick={() => navigate('/dashboard')} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6">
+        <ArrowLeft size={18} /> Back to Home 
       </button>
       <h2 className="text-4xl font-bold text-center mb-10">Profile</h2>
       <div className="max-w-md mx-auto flex flex-col items-center gap-6">

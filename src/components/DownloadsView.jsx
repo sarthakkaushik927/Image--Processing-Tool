@@ -69,7 +69,7 @@ export default function DownloadsView({ isAuthenticated, onLogout, profileImage 
         className="relative z-10 pt-24 px-6 md:px-12 max-w-7xl mx-auto pb-20"
       >
         <button 
-          onClick={() => navigate('/')} 
+          onClick={() => navigate('/dashboard')} 
           className="group flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
         > 
           <div className="p-2 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">

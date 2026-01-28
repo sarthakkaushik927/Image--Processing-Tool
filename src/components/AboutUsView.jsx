@@ -24,7 +24,7 @@ export default function AboutUsView({ isAuthenticated, onLogout, profileImage })
         className="relative z-10 pt-24 px-6 md:px-12 max-w-5xl mx-auto"
       >
         <button 
-          onClick={() => navigate('/')} 
+          onClick={() => navigate('/dashboard')} 
           className="flex items-center gap-2 text-gray-400 hover:text-white mb-8 transition-colors"
         >
           <ArrowLeft size={18} /> Back to Home

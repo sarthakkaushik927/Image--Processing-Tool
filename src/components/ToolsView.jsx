@@ -95,7 +95,7 @@ export default function ToolsView() {
         {/* --- Header Section --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <button 
-            onClick={() => navigate('/')} 
+            onClick={() => navigate('/dashboard')} 
             className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
           >
             <div className="p-2 rounded-full bg-white/5 border border-white/5 group-hover:border-white/20 transition-all">
